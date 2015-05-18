@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 )
 
@@ -11,6 +10,15 @@ type Song struct {
 	Videoid string `json:"videoid"`
 	Length  int    `json:"length"`
 	Seek    int    `json:"seek"`
+}
+
+func createSong(videoid string) Song {
+	return Song{
+		Id:      -1,
+		Videoid: videoid,
+		Length:  getDuration(videoid),
+		Seek:    0,
+	}
 }
 
 type Playlist []Song
@@ -25,12 +33,15 @@ func Truncate() {
 }
 
 func Seed() {
-	seedSong := Song{
-		Id:      0,
-		Videoid: "Song" + strconv.Itoa(SongID),
-		Length:  5,
-		Seek:    0,
+	seedQuery := "David Bowie Heroes"
+	searchResults := Search(seedQuery)
+	seedSong := searchResults[0]
+	for i := range searchResults {
+		if searchResults[i].Length != -1 {
+			seedSong = searchResults[i]
+		}
 	}
+	Truncate()
 	enqueue(seedSong)
 }
 
@@ -132,21 +143,23 @@ func Size() int {
 }
 
 func autoAdd() {
-	if Size() == 1 {
-		newSong := recommend(lastSong())
-		enqueue(newSong)
+	ticker := time.NewTicker(time.Second * 5)
+	for _ = range ticker.C {
+		if Size() == 1 {
+			newSong := recommend(lastSong())
+			enqueue(newSong)
+		}
 	}
 }
 
 func recommend(s Song) Song {
-	SongID = SongID + 1
-	recommendedSong := Song{
-		Videoid: "Song" + strconv.Itoa(SongID),
-		Length:  5,
-		Seek:    0,
+	recommendations := Recommend(s.Videoid)
+	for i := range recommendations {
+		if recommendations[i].Length != -1 {
+			return recommendations[i]
+		}
 	}
-	time.Sleep(3 * time.Second)
-	return recommendedSong
+	return recommendations[0]
 }
 
 func Refresh() {

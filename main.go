@@ -11,17 +11,16 @@ import (
 var SongID = 0
 
 func play() {
-	Truncate()
 	Seed()
 	ticker := time.NewTicker(time.Second)
 	for _ = range ticker.C {
-		go autoAdd()
 		Refresh()
 	}
 }
 
 func main() {
 	go play()
+	go autoAdd()
 	router := NewRouter()
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
