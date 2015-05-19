@@ -162,6 +162,7 @@ func ParseISO8601Duration(isoStr string) int {
 	//PT6M11S
 	//PT41M44S
 	//PT1H18M27S
+	//PT15M
 	isoStr = strings.Replace(isoStr, "PT", "", 1)
 	isoStr = strings.Replace(isoStr, "H", ",", 1)
 	isoStr = strings.Replace(isoStr, "M", ",", 1)
@@ -171,9 +172,13 @@ func ParseISO8601Duration(isoStr string) int {
 		return -1
 	}
 	minutes, err := strconv.Atoi(timeSlice[0])
-	CheckError(err)
+	if err != nil {
+		return -1
+	}
 	seconds, err := strconv.Atoi(timeSlice[1])
-	CheckError(err)
+	if err != nil {
+		return -1
+	}
 	duration := minutes*60 + seconds
 	if duration < 120 || duration > 600 {
 		duration = -1
