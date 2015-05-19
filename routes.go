@@ -15,7 +15,7 @@ var routes = Routes{
 	Route{
 		"CurrentlyPlaying",
 		"GET",
-		"/currentlyplaying",
+		"/playlist/currentlyplaying",
 		CurrentlyPlayingHandler,
 	},
 	Route{
@@ -23,5 +23,11 @@ var routes = Routes{
 		"GET",
 		"/playlist",
 		PlaylistHandler,
+	},
+	Route{
+		"Add",
+		"POST",
+		"/add",
+		AddHandler,
 	},
 }

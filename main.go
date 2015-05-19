@@ -22,7 +22,7 @@ func main() {
 	go play()
 	go autoAdd()
 	router := NewRouter()
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":25404", router))
 }
 
 func GetDbHandle() *sql.DB {

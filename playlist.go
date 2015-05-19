@@ -8,20 +8,32 @@ import (
 type Song struct {
 	Id      int    `json:"id"`
 	Videoid string `json:"videoid"`
+	Name    string `json:"name"`
 	Length  int    `json:"length"`
 	Seek    int    `json:"seek"`
 }
 
-func createSong(videoid string) Song {
+type Playlist []Song
+
+func (s *Song) init(id int, videoid string, name string, length int, seek int) Song {
+	return Song{
+		Id:      id,
+		Videoid: videoid,
+		Name:    name,
+		Length:  length,
+		Seek:    seek,
+	}
+}
+
+func createSong(videoid string, name string) Song {
 	return Song{
 		Id:      -1,
 		Videoid: videoid,
+		Name:    name,
 		Length:  getDuration(videoid),
 		Seek:    0,
 	}
 }
-
-type Playlist []Song
 
 func Truncate() {
 	db := GetDbHandle()
@@ -32,15 +44,20 @@ func Truncate() {
 	CheckError(err)
 }
 
-func Seed() {
-	seedQuery := "David Bowie Heroes"
-	searchResults := Search(seedQuery)
-	seedSong := searchResults[0]
-	for i := range searchResults {
-		if searchResults[i].Length != -1 {
-			seedSong = searchResults[i]
+func cleanup(results []Song) []Song {
+	var cleanedResults []Song
+	for i := range results {
+		if results[i].Length != -1 {
+			cleanedResults = append(cleanedResults, results[i])
 		}
 	}
+	return cleanedResults
+}
+
+func Seed() {
+	seedQuery := "David Bowie Heroes"
+	searchResults := cleanup(Search(seedQuery))
+	seedSong := searchResults[0]
 	Truncate()
 	enqueue(seedSong)
 }
@@ -48,6 +65,7 @@ func Seed() {
 func GetPlaylist() Playlist {
 	var id int
 	var videoid string
+	var name string
 	var length int
 	var seek int
 	playlist := []Song{}
@@ -57,13 +75,9 @@ func GetPlaylist() Playlist {
 	CheckError(err)
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&id, &videoid, &length, &seek)
-		s := Song{
-			Id:      id,
-			Videoid: videoid,
-			Length:  length,
-			Seek:    seek,
-		}
+		err := rows.Scan(&id, &videoid, &name, &length, &seek)
+		var s = Song{}
+		s = s.init(id, videoid, name, length, seek)
 		CheckError(err)
 		playlist = append(playlist, s)
 	}
@@ -73,18 +87,15 @@ func GetPlaylist() Playlist {
 func CurrentlyPlaying() Song {
 	var id int
 	var videoid string
+	var name string
 	var length int
 	var seek int
 	db := GetDbHandle()
 	defer db.Close()
-	err := db.QueryRow("SELECT * FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id, &videoid, &length, &seek)
+	err := db.QueryRow("SELECT * FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek)
 	CheckError(err)
-	s := Song{
-		Id:      id,
-		Videoid: videoid,
-		Length:  length,
-		Seek:    seek,
-	}
+	var s = Song{}
+	s = s.init(id, videoid, name, length, seek)
 	return s
 }
 
@@ -97,30 +108,27 @@ func updateSeek(s Song) {
 	CheckError(err)
 }
 
-func lastSong() Song {
+func getLastSong() Song {
 	var id int
 	var videoid string
+	var name string
 	var length int
 	var seek int
 	db := GetDbHandle()
 	defer db.Close()
-	err := db.QueryRow("SELECT * FROM playlist ORDER BY id DESC LIMIT 1").Scan(&id, &videoid, &length, &seek)
+	err := db.QueryRow("SELECT * FROM playlist ORDER BY id DESC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek)
 	CheckError(err)
-	LastSong := Song{
-		Id:      id,
-		Videoid: videoid,
-		Length:  length,
-		Seek:    seek,
-	}
-	return LastSong
+	var s = Song{}
+	lastSong := s.init(id, videoid, name, length, seek)
+	return lastSong
 }
 
 func enqueue(s Song) {
 	db := GetDbHandle()
 	defer db.Close()
-	stmt, err := db.Prepare("INSERT INTO playlist (videoid, length, seek) VALUES (?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO playlist (videoid, name, length, seek) VALUES (?, ?, ?, ?)")
 	CheckError(err)
-	_, err = stmt.Exec(s.Videoid, s.Length, s.Seek)
+	_, err = stmt.Exec(s.Videoid, s.Name, s.Length, s.Seek)
 	CheckError(err)
 }
 
@@ -142,23 +150,23 @@ func Size() int {
 	return size
 }
 
+func Add(query string) {
+	searchResults := cleanup(Search(query))
+	enqueue(searchResults[0])
+}
+
 func autoAdd() {
 	ticker := time.NewTicker(time.Second * 5)
 	for _ = range ticker.C {
 		if Size() == 1 {
-			newSong := recommend(lastSong())
+			newSong := recommend(getLastSong())
 			enqueue(newSong)
 		}
 	}
 }
 
 func recommend(s Song) Song {
-	recommendations := Recommend(s.Videoid)
-	for i := range recommendations {
-		if recommendations[i].Length != -1 {
-			return recommendations[i]
-		}
-	}
+	recommendations := cleanup(Recommend(s.Videoid))
 	return recommendations[0]
 }
 

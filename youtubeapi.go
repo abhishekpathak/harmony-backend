@@ -18,15 +18,37 @@ func Search(query string) []Song {
 		VideoId string
 	}
 
+	type Url struct {
+		url string
+	}
+
+	type Thumbnail struct {
+		Default Url
+		Medium  Url
+		High    Url
+	}
+
+	type Snippet struct {
+		PublishedAt          string
+		ChannelId            string
+		Title                string
+		Description          string
+		Thumbnails           Thumbnail
+		ChannelTitle         string
+		LiveBroadcastContent string
+	}
+
 	type Item struct {
-		Id Id
+		Id      Id
+		Snippet Snippet
 	}
 
 	type Resp struct {
 		Items []Item
 	}
+
 	searchUrl := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?videoEmbeddable=true&q=%s", url.QueryEscape(query))
-	searchUrl += "&part=snippet&fields=items%2Fid&videoSyndicated=true&type=video&videoDuration=medium"
+	searchUrl += "&part=snippet&fields=items(id%2Csnippet)&videoSyndicated=true&type=video&videoDuration=medium"
 	searchUrl += fmt.Sprintf("&key=%s", API_KEY)
 
 	response, err := http.Get(searchUrl)
@@ -41,7 +63,7 @@ func Search(query string) []Song {
 	searchResults := []Song{}
 
 	for _, item := range resp.Items {
-		searchResults = append(searchResults, createSong(item.Id.VideoId))
+		searchResults = append(searchResults, createSong(item.Id.VideoId, item.Snippet.Title))
 	}
 	return searchResults
 }
@@ -52,15 +74,37 @@ func Recommend(videoid string) []Song {
 		VideoId string
 	}
 
+	type Url struct {
+		url string
+	}
+
+	type Thumbnail struct {
+		Default Url
+		Medium  Url
+		High    Url
+	}
+
+	type Snippet struct {
+		PublishedAt          string
+		ChannelId            string
+		Title                string
+		Description          string
+		Thumbnails           Thumbnail
+		ChannelTitle         string
+		LiveBroadcastContent string
+	}
+
 	type Item struct {
-		Id Id
+		Id      Id
+		Snippet Snippet
 	}
 
 	type Resp struct {
 		Items []Item
 	}
+
 	recommendUrl := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?videoEmbeddable=true&relatedToVideoId=%s", videoid)
-	recommendUrl += "&part=snippet&fields=items%2Fid&videoSyndicated=true&type=video&videoDuration=medium"
+	recommendUrl += "&part=snippet&fields=items(id%2Csnippet)&videoSyndicated=true&type=video&videoDuration=medium"
 	recommendUrl += fmt.Sprintf("&key=%s", API_KEY)
 
 	response, err := http.Get(recommendUrl)
@@ -75,7 +119,7 @@ func Recommend(videoid string) []Song {
 	recommendations := []Song{}
 
 	for _, item := range resp.Items {
-		recommendations = append(recommendations, createSong(item.Id.VideoId))
+		recommendations = append(recommendations, createSong(item.Id.VideoId, item.Snippet.Title))
 	}
 	return recommendations
 }
