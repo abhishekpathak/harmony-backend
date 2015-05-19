@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -31,7 +32,7 @@ func createSong(videoid string, name string) Song {
 		Videoid: videoid,
 		Name:    name,
 		Length:  getDuration(videoid),
-		Seek:    0,
+		Seek:    -5,
 	}
 }
 
@@ -167,7 +168,8 @@ func autoAdd() {
 
 func recommend(s Song) Song {
 	recommendations := cleanup(Recommend(s.Videoid))
-	return recommendations[0]
+	songindex := rand.Intn(len(recommendations)-3) + 3
+	return recommendations[songindex]
 }
 
 func Refresh() {
