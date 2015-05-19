@@ -182,3 +182,9 @@ func Refresh() {
 		Refresh()
 	}
 }
+
+func Skip() {
+	s := CurrentlyPlaying()
+	remove(s)
+	Refresh()
+}

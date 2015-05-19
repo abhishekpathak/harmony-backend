@@ -26,3 +26,8 @@ func AddHandler(w http.ResponseWriter, r *http.Request) {
 	Add(query)
 	w.Write([]byte("{\"status\":\"success\"}"))
 }
+
+func SkipHandler(w http.ResponseWriter, r *http.Request) {
+	Skip()
+	w.Write([]byte("{\"status\":\"success\"}"))
+}

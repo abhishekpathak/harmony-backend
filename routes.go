@@ -30,4 +30,10 @@ var routes = Routes{
 		"/add",
 		AddHandler,
 	},
+	Route{
+		"Skip",
+		"POST",
+		"/skip",
+		SkipHandler,
+	},
 }
