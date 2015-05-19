@@ -48,7 +48,7 @@ func Search(query string) []Song {
 	}
 
 	searchUrl := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?videoEmbeddable=true&q=%s", url.QueryEscape(query))
-	searchUrl += "&part=snippet&fields=items(id%2Csnippet)&videoSyndicated=true&type=video&videoDuration=medium&maxResults=5"
+	searchUrl += "&part=snippet&fields=items(id%2Csnippet)&type=video&videoDuration=medium&maxResults=5"
 	searchUrl += fmt.Sprintf("&key=%s", API_KEY)
 
 	response, err := http.Get(searchUrl)
@@ -104,7 +104,7 @@ func Recommend(videoid string) []Song {
 	}
 
 	recommendUrl := fmt.Sprintf("https://www.googleapis.com/youtube/v3/search?videoEmbeddable=true&relatedToVideoId=%s", videoid)
-	recommendUrl += "&part=snippet&fields=items(id%2Csnippet)&videoSyndicated=true&type=video&videoDuration=medium&maxResults=15"
+	recommendUrl += "&part=snippet&fields=items(id%2Csnippet)&type=video&videoDuration=medium&maxResults=15"
 	recommendUrl += fmt.Sprintf("&key=%s", API_KEY)
 
 	response, err := http.Get(recommendUrl)

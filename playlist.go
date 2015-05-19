@@ -56,7 +56,7 @@ func cleanup(results []Song) []Song {
 }
 
 func Seed() {
-	seedQuery := "David Bowie Heroes"
+	seedQuery := "you shook me all night long"
 	searchResults := cleanup(Search(seedQuery))
 	seedSong := searchResults[0]
 	Truncate()
