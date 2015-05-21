@@ -8,6 +8,7 @@ import (
 
 func CurrentlyPlayingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	song := CurrentlyPlaying()
 	fmt.Println(song)
@@ -17,6 +18,7 @@ func CurrentlyPlayingHandler(w http.ResponseWriter, r *http.Request) {
 func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
 	playlist := GetPlaylist()
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(playlist)
 }
@@ -24,10 +26,12 @@ func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
 func AddHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.FormValue("q")
 	Add(query)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write([]byte("{\"status\":\"success\"}"))
 }
 
 func SkipHandler(w http.ResponseWriter, r *http.Request) {
 	Skip()
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write([]byte("{\"status\":\"success\"}"))
 }
