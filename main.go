@@ -5,6 +5,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
+	"os"
 	"time"
 )
 
@@ -26,7 +27,11 @@ func main() {
 }
 
 func GetDbHandle() *sql.DB {
-	db, err := sql.Open("mysql", "root@tcp(127.0.0.1:3306)/songster")
+	DB_HOST := os.Getenv("OPENSHIFT_MYSQL_DB_HOST")
+	DB_PORT := os.Getenv("OPENSHIFT_MYSQL_DB_PORT")
+	DB_NAME := "songster"
+	DSN := "root@tcp(" + DB_HOST + ":" + DB_PORT + ")/" + DB_NAME
+	db, err := sql.Open("mysql", DSN)
 	CheckError(err)
 	return db
 }
