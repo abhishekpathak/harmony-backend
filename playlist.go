@@ -56,11 +56,14 @@ func cleanup(results []Song) []Song {
 }
 
 func Seed() {
-	seedQuery := "you shook me all night long"
-	searchResults := cleanup(Search(seedQuery))
-	seedSong := searchResults[0]
-	Truncate()
-	enqueue(seedSong)
+	/*
+		seedQuery := "tum se hi"
+		searchResults := cleanup(Search(seedQuery))
+		seedSong := searchResults[0]
+		Truncate()
+		enqueue(seedSong)
+	*/
+	enqueue(getLastSong())
 }
 
 func GetPlaylist() Playlist {
@@ -179,12 +182,15 @@ func Refresh() {
 		fmt.Println(s.Videoid, "   ", s.Seek, "          ", GetPlaylist())
 	} else {
 		remove(s)
+		go PostToSlack(CurrentlyPlaying().Name)
 		Refresh()
 	}
 }
 
 func Skip() {
 	s := CurrentlyPlaying()
+	PostToSlack("skipped " + CurrentlyPlaying().Name + ". Don't do this :angry")
 	remove(s)
+	go PostToSlack(CurrentlyPlaying().Name)
 	Refresh()
 }

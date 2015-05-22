@@ -2,9 +2,11 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"time"
 )
@@ -12,7 +14,8 @@ import (
 var SongID = 0
 
 func play() {
-	Seed()
+	//Seed()
+	go PostToSlack(CurrentlyPlaying().Name)
 	ticker := time.NewTicker(time.Second)
 	for _ = range ticker.C {
 		Refresh()
@@ -24,6 +27,24 @@ func main() {
 	go autoAdd()
 	router := NewRouter()
 	log.Fatal(http.ListenAndServe(":25404", router))
+}
+
+func PostToSlack(text string) {
+	// constructing the URL
+	apiUrl := "https://hooks.slack.com"
+	resource := "/services/T04TS7W4P/B050S572D/T8pN7F6QSlI7I6PB90clC25I"
+	u, _ := url.ParseRequestURI(apiUrl)
+	u.Path = resource
+	urlStr := fmt.Sprintf("%v", u)
+
+	textPayload := `{"text":"#nowplaying ` + text + `"}`
+	data := url.Values{}
+	data.Set("payload", textPayload)
+	client := &http.Client{}
+	fmt.Println(urlStr, textPayload)
+	resp, err := client.PostForm(urlStr, data)
+	CheckError(err)
+	fmt.Println("Slack webhook responded with code : ", resp)
 }
 
 func GetDbHandle() *sql.DB {
