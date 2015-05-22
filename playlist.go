@@ -56,14 +56,11 @@ func cleanup(results []Song) []Song {
 }
 
 func Seed() {
-	/*
-		seedQuery := "tum se hi"
-		searchResults := cleanup(Search(seedQuery))
-		seedSong := searchResults[0]
-		Truncate()
-		enqueue(seedSong)
-	*/
-	enqueue(getLastSong())
+	seedQuery := "tum se hi"
+	searchResults := cleanup(Search(seedQuery))
+	seedSong := searchResults[0]
+	Truncate()
+	enqueue(seedSong)
 }
 
 func GetPlaylist() Playlist {
@@ -170,9 +167,17 @@ func autoAdd() {
 }
 
 func recommend(s Song) Song {
+	var recommendedSong Song
 	recommendations := cleanup(Recommend(s.Videoid))
-	songindex := rand.Intn(len(recommendations)-3) + 3
-	return recommendations[songindex]
+	if len(recommendations) < 6 {
+		seedQuery := "tum se hi"
+		searchResults := cleanup(Search(seedQuery))
+		recommendedSong = searchResults[0]
+	} else {
+		songindex := rand.Intn(len(recommendations)-3) + 3
+		recommendedSong = recommendations[songindex]
+	}
+	return recommendedSong
 }
 
 func Refresh() {
