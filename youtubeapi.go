@@ -168,7 +168,7 @@ func ParseISO8601Duration(isoStr string) int {
 	isoStr = strings.Replace(isoStr, "M", ",", 1)
 	isoStr = strings.Replace(isoStr, "S", "", 1)
 	timeSlice := strings.Split(isoStr, ",")
-	if len(timeSlice) > 2 {
+	if len(timeSlice) != 2 {
 		return -1
 	}
 	minutes, err := strconv.Atoi(timeSlice[0])
