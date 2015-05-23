@@ -25,9 +25,14 @@ func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
 
 func AddHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.FormValue("q")
-	Add(query)
+	user := r.FormValue("user")
+	status := Add(query, user)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Write([]byte("{\"status\":\"success\"}"))
+	if status == true {
+		http.Error(w, "{\"status\":\"error\"}", http.StatusOK)
+	} else {
+		http.Error(w, "{\"status\":\"error\"}", http.StatusBadRequest)
+	}
 }
 
 func SkipHandler(w http.ResponseWriter, r *http.Request) {

@@ -63,7 +63,7 @@ func Search(query string) []Song {
 	searchResults := []Song{}
 
 	for _, item := range resp.Items {
-		searchResults = append(searchResults, createSong(item.Id.VideoId, item.Snippet.Title, "client"))
+		searchResults = append(searchResults, createSong(item.Id.VideoId, item.Snippet.Title))
 	}
 	return searchResults
 }
@@ -119,9 +119,64 @@ func Recommend(videoid string) []Song {
 	recommendations := []Song{}
 
 	for _, item := range resp.Items {
-		recommendations = append(recommendations, createSong(item.Id.VideoId, item.Snippet.Title, "system"))
+		recommendations = append(recommendations, createSong(item.Id.VideoId, item.Snippet.Title))
 	}
 	return recommendations
+}
+
+func GetName(videoid string) string {
+	type Url struct {
+		url string
+	}
+
+	type Thumbnail struct {
+		Default Url
+		Medium  Url
+		High    Url
+	}
+
+	type Localized struct {
+		Title       string
+		description string
+	}
+
+	type Snippet struct {
+		PublishedAt          string
+		ChannelId            string
+		Title                string
+		Description          string
+		Thumbnails           Thumbnail
+		ChannelTitle         string
+		LiveBroadcastContent string
+		Localized            Localized
+	}
+
+	type Item struct {
+		Id      string
+		Snippet Snippet
+	}
+
+	type Resp struct {
+		Items []Item
+	}
+
+	searchUrl := fmt.Sprintf("https://www.googleapis.com/youtube/v3/videos?id=%s", url.QueryEscape(videoid))
+	searchUrl += "&part=snippet&fields=items(id%2Csnippet)&maxResults=1"
+	searchUrl += fmt.Sprintf("&key=%s", API_KEY)
+
+	response, err := http.Get(searchUrl)
+	CheckError(err)
+	defer response.Body.Close()
+	contents, err := ioutil.ReadAll(response.Body)
+	CheckError(err)
+
+	resp := Resp{}
+	err = json.Unmarshal([]byte(contents), &resp)
+	CheckError(err)
+	if len(resp.Items) != 1 {
+		return "NAME NOT FOUND"
+	}
+	return resp.Items[0].Snippet.Title
 }
 
 func getDuration(videoid string) int {
@@ -154,6 +209,9 @@ func getDuration(videoid string) int {
 	resp := Resp{}
 	err = json.Unmarshal([]byte(contents), &resp)
 	CheckError(err)
+	if len(resp.Items) < 1 {
+		return -1
+	}
 	ISO8601Duration := string(resp.Items[0].ContentDetails.Duration)
 	return ParseISO8601Duration(ISO8601Duration)
 }

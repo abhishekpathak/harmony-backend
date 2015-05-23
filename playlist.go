@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"strings"
 	"time"
 )
 
@@ -28,14 +29,14 @@ func (s *Song) init(id int, videoid string, name string, length int, seek int, a
 	}
 }
 
-func createSong(videoid string, name string, addedBy string) Song {
+func createSong(videoid string, name string) Song {
 	return Song{
 		Id:      -1,
 		Videoid: videoid,
 		Name:    name,
 		Length:  getDuration(videoid),
 		Seek:    -5,
-		AddedBy: addedBy,
+		AddedBy: "system",
 	}
 }
 
@@ -157,9 +158,31 @@ func Size() int {
 	return size
 }
 
-func Add(query string) {
+func Add(query string, user string) bool {
+	if strings.Contains(query, "www.youtube.com/watch?v=") {
+		query = strings.Replace(query, "https://www.youtube.com/watch?v=", "", 1)
+		query = strings.Replace(query, "http://www.youtube.com/watch?v=", "", 1)
+		query = strings.Replace(query, "www.youtube.com/watch?v=", "", 1)
+		song := createSong(query, GetName(query))
+		if song.Length == -1 || user == "" {
+			return false
+		} else {
+			enqueue(song, user)
+			return true
+		}
+	}
 	searchResults := cleanup(Search(query))
-	enqueue(searchResults[0], "client")
+	if len(searchResults) == 0 {
+		return false
+	}
+	for i := range searchResults {
+		if searchResults[i].Name == query {
+			enqueue(searchResults[i], user)
+			return true
+		}
+	}
+	enqueue(searchResults[0], user)
+	return true
 }
 
 func autoAdd() {
