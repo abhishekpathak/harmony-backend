@@ -189,15 +189,15 @@ func Refresh() {
 		fmt.Println(s.Videoid, "   ", s.Seek, "          ", GetPlaylist())
 	} else {
 		remove(s)
-		go PostToSlack(CurrentlyPlaying().Name)
+		go PostToSlack("#nowplaying " + CurrentlyPlaying().Name)
 		Refresh()
 	}
 }
 
 func Skip() {
 	s := CurrentlyPlaying()
-	PostToSlack("skipped " + CurrentlyPlaying().Name + ". Don't do this :angry")
+	PostToSlack("#skipped " + CurrentlyPlaying().Name + ". Don't do this :rage:")
 	remove(s)
-	go PostToSlack(CurrentlyPlaying().Name)
+	go PostToSlack("#nowplaying " + CurrentlyPlaying().Name)
 	Refresh()
 }

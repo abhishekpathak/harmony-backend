@@ -15,7 +15,7 @@ var SongID = 0
 
 func play() {
 	//Seed()
-	go PostToSlack(CurrentlyPlaying().Name)
+	go PostToSlack("#nowplaying " + CurrentlyPlaying().Name)
 	ticker := time.NewTicker(time.Second)
 	for _ = range ticker.C {
 		Refresh()
@@ -37,7 +37,7 @@ func PostToSlack(text string) {
 	u.Path = resource
 	urlStr := fmt.Sprintf("%v", u)
 
-	textPayload := `{"text":"#nowplaying ` + text + `"}`
+	textPayload := `{"text": ` + text + `"}`
 	data := url.Values{}
 	data.Set("payload", textPayload)
 	client := &http.Client{}
