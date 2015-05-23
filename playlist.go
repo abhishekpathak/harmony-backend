@@ -60,7 +60,7 @@ func Seed() {
 	searchResults := cleanup(Search(seedQuery))
 	seedSong := searchResults[0]
 	Truncate()
-	enqueue(seedSong)
+	enqueue(seedSong, "system")
 }
 
 func GetPlaylist() Playlist {
@@ -69,6 +69,7 @@ func GetPlaylist() Playlist {
 	var name string
 	var length int
 	var seek int
+	var addedBy string
 	playlist := []Song{}
 	db := GetDbHandle()
 	defer db.Close()
@@ -76,7 +77,7 @@ func GetPlaylist() Playlist {
 	CheckError(err)
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&id, &videoid, &name, &length, &seek)
+		err := rows.Scan(&id, &videoid, &name, &length, &seek, &addedBy)
 		var s = Song{}
 		s = s.init(id, videoid, name, length, seek)
 		CheckError(err)
@@ -91,9 +92,10 @@ func CurrentlyPlaying() Song {
 	var name string
 	var length int
 	var seek int
+	var addedBy string
 	db := GetDbHandle()
 	defer db.Close()
-	err := db.QueryRow("SELECT * FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek)
+	err := db.QueryRow("SELECT * FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek, &addedBy)
 	CheckError(err)
 	var s = Song{}
 	s = s.init(id, videoid, name, length, seek)
@@ -124,12 +126,12 @@ func getLastSong() Song {
 	return lastSong
 }
 
-func enqueue(s Song) {
+func enqueue(s Song, agent string) {
 	db := GetDbHandle()
 	defer db.Close()
-	stmt, err := db.Prepare("INSERT INTO playlist (videoid, name, length, seek) VALUES (?, ?, ?, ?)")
+	stmt, err := db.Prepare("INSERT INTO playlist (videoid, name, length, seek, added_by) VALUES (?, ?, ?, ?, ?)")
 	CheckError(err)
-	_, err = stmt.Exec(s.Videoid, s.Name, s.Length, s.Seek)
+	_, err = stmt.Exec(s.Videoid, s.Name, s.Length, s.Seek, agent)
 	CheckError(err)
 }
 
@@ -153,7 +155,7 @@ func Size() int {
 
 func Add(query string) {
 	searchResults := cleanup(Search(query))
-	enqueue(searchResults[0])
+	enqueue(searchResults[0], "client")
 }
 
 func autoAdd() {
@@ -163,7 +165,7 @@ func autoAdd() {
 		timeRemaining := c.Length - c.Seek
 		if Size() == 1 && timeRemaining < 30 {
 			newSong := recommend(getLastSong())
-			enqueue(newSong)
+			enqueue(newSong, "system")
 		}
 	}
 }
