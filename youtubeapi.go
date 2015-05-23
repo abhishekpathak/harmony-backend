@@ -63,7 +63,7 @@ func Search(query string) []Song {
 	searchResults := []Song{}
 
 	for _, item := range resp.Items {
-		searchResults = append(searchResults, createSong(item.Id.VideoId, item.Snippet.Title))
+		searchResults = append(searchResults, createSong(item.Id.VideoId, item.Snippet.Title, "client"))
 	}
 	return searchResults
 }
@@ -119,7 +119,7 @@ func Recommend(videoid string) []Song {
 	recommendations := []Song{}
 
 	for _, item := range resp.Items {
-		recommendations = append(recommendations, createSong(item.Id.VideoId, item.Snippet.Title))
+		recommendations = append(recommendations, createSong(item.Id.VideoId, item.Snippet.Title, "system"))
 	}
 	return recommendations
 }

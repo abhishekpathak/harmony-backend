@@ -12,27 +12,30 @@ type Song struct {
 	Name    string `json:"name"`
 	Length  int    `json:"length"`
 	Seek    int    `json:"seek"`
+	AddedBy string `json:"added_by"`
 }
 
 type Playlist []Song
 
-func (s *Song) init(id int, videoid string, name string, length int, seek int) Song {
+func (s *Song) init(id int, videoid string, name string, length int, seek int, addedBy string) Song {
 	return Song{
 		Id:      id,
 		Videoid: videoid,
 		Name:    name,
 		Length:  length,
 		Seek:    seek,
+		AddedBy: addedBy,
 	}
 }
 
-func createSong(videoid string, name string) Song {
+func createSong(videoid string, name string, addedBy string) Song {
 	return Song{
 		Id:      -1,
 		Videoid: videoid,
 		Name:    name,
 		Length:  getDuration(videoid),
 		Seek:    -5,
+		AddedBy: addedBy,
 	}
 }
 
@@ -79,7 +82,7 @@ func GetPlaylist() Playlist {
 	for rows.Next() {
 		err := rows.Scan(&id, &videoid, &name, &length, &seek, &addedBy)
 		var s = Song{}
-		s = s.init(id, videoid, name, length, seek)
+		s = s.init(id, videoid, name, length, seek, addedBy)
 		CheckError(err)
 		playlist = append(playlist, s)
 	}
@@ -98,7 +101,7 @@ func CurrentlyPlaying() Song {
 	err := db.QueryRow("SELECT * FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek, &addedBy)
 	CheckError(err)
 	var s = Song{}
-	s = s.init(id, videoid, name, length, seek)
+	s = s.init(id, videoid, name, length, seek, addedBy)
 	return s
 }
 
@@ -117,12 +120,13 @@ func getLastSong() Song {
 	var name string
 	var length int
 	var seek int
+	var addedBy string
 	db := GetDbHandle()
 	defer db.Close()
-	err := db.QueryRow("SELECT * FROM playlist ORDER BY id DESC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek)
+	err := db.QueryRow("SELECT * FROM playlist ORDER BY id DESC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek, &addedBy)
 	CheckError(err)
 	var s = Song{}
-	lastSong := s.init(id, videoid, name, length, seek)
+	lastSong := s.init(id, videoid, name, length, seek, addedBy)
 	return lastSong
 }
 
