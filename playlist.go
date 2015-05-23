@@ -159,7 +159,9 @@ func Add(query string) {
 func autoAdd() {
 	ticker := time.NewTicker(time.Second * 5)
 	for _ = range ticker.C {
-		if Size() == 1 {
+		c := CurrentlyPlaying()
+		timeRemaining := c.Length - c.Seek
+		if Size() == 1 && timeRemaining < 30 {
 			newSong := recommend(getLastSong())
 			enqueue(newSong)
 		}
