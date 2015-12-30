@@ -9,7 +9,7 @@ PRIMARY KEY(id)
 
 alter table playlist add column added_by varchar(255) not null default "system";
 
-alter table playlist add column thumbnail varchar(255);
+alter table playlist add column thumbnail varchar(255) not null default "NA";
 
 create table play_history(
 videoid varchar(100) PRIMARY KEY,
@@ -27,6 +27,7 @@ PRIMARY KEY(user,videoid)
 
 create table song_details(
 name varchar(255) not null default '',
+videoid varchar(100) not null PRIMARY KEY,
 duration int not null,
 thumbnail varchar(255) not null default 'NA',
 views bigint not null,

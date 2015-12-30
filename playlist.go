@@ -115,19 +115,19 @@ func Seed() {
 	enqueue(seedSong, "system")
 }
 
-func GetPlaylist() []string {
-	var name string
-	playlist := make([]string, 1)
+func GetPlaylist() []Song {
+	var id int
+	playlist := make([]Song, 0)
 	db := GetDbHandle()
 	defer db.Close()
-	rows, err := db.Query("SELECT name from  playlist order by id")
+	rows, err := db.Query("SELECT id from  playlist order by id")
 	CheckError(err)
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&name)
-		//s := getSong(id)
+		err := rows.Scan(&id)
+		s := getSong(id)
 		CheckError(err)
-		playlist = append(playlist, name)
+		playlist = append(playlist, s)
 	}
 	return playlist
 }
