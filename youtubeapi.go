@@ -12,6 +12,30 @@ import (
 
 const API_KEY = "AIzaSyCbfxhEDNKXXPFbmjttsqFvGHxjvTlfVxg"
 
+type SongInfo struct {
+	Name       string
+	Duration   int
+	Thumbnail  string
+	Views      int
+	Likes      int
+	Dislikes   int
+	Favourites int
+	Comments   int
+}
+
+func (v *SongInfo) init() SongInfo {
+	return SongInfo{
+		Name:       "not found",
+		Duration:   -1,
+		Thumbnail:  "not found",
+		Views:      -1,
+		Likes:      -1,
+		Dislikes:   -1,
+		Favourites: -1,
+		Comments:   -1,
+	}
+}
+
 func Search(query string) []Song {
 	type Id struct {
 		Kind    string
@@ -63,7 +87,7 @@ func Search(query string) []Song {
 	searchResults := []Song{}
 
 	for _, item := range resp.Items {
-		searchResults = append(searchResults, createSong(item.Id.VideoId, item.Snippet.Title))
+		searchResults = append(searchResults, createSong(item.Id.VideoId))
 	}
 	return searchResults
 }
@@ -119,12 +143,12 @@ func Recommend(videoid string) []Song {
 	recommendations := []Song{}
 
 	for _, item := range resp.Items {
-		recommendations = append(recommendations, createSong(item.Id.VideoId, item.Snippet.Title))
+		recommendations = append(recommendations, createSong(item.Id.VideoId))
 	}
 	return recommendations
 }
 
-func GetName(videoid string) string {
+func GetInfo(videoid string) SongInfo {
 	type Url struct {
 		url string
 	}
@@ -151,36 +175,7 @@ func GetName(videoid string) string {
 		Localized            Localized
 	}
 
-	type Item struct {
-		Id      string
-		Snippet Snippet
-	}
-
-	type Resp struct {
-		Items []Item
-	}
-
-	searchUrl := fmt.Sprintf("https://www.googleapis.com/youtube/v3/videos?id=%s", url.QueryEscape(videoid))
-	searchUrl += "&part=snippet&fields=items(id%2Csnippet)&maxResults=1"
-	searchUrl += fmt.Sprintf("&key=%s", API_KEY)
-
-	response, err := http.Get(searchUrl)
-	CheckError(err)
-	defer response.Body.Close()
-	contents, err := ioutil.ReadAll(response.Body)
-	CheckError(err)
-
-	resp := Resp{}
-	err = json.Unmarshal([]byte(contents), &resp)
-	CheckError(err)
-	if len(resp.Items) != 1 {
-		return "NAME NOT FOUND"
-	}
-	return resp.Items[0].Snippet.Title
-}
-
-func getDuration(videoid string) int {
-	type Item struct {
+	type ContentDetails struct {
 		Duration        string
 		Dimension       string
 		definition      string
@@ -188,19 +183,31 @@ func getDuration(videoid string) int {
 		licensedContent string
 	}
 
-	type ContentDetails struct {
-		ContentDetails Item
+	type Statistics struct {
+		Viewcount      string
+		Likecount      string
+		Dislikecount   string
+		Favouritecount string
+		Commentcount   string
+	}
+
+	type Item struct {
+		Id             string
+		Snippet        Snippet
+		ContentDetails ContentDetails
+		Statistics     Statistics
 	}
 
 	type Resp struct {
-		Items []ContentDetails
+		Items []Item
 	}
-	recommendUrl := "https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails"
-	recommendUrl += fmt.Sprintf("&id=%s", videoid)
-	recommendUrl += "&fields=items%2FcontentDetails"
-	recommendUrl += fmt.Sprintf("&key=%s", API_KEY)
 
-	response, err := http.Get(recommendUrl)
+	infoUrl := "https://www.googleapis.com/youtube/v3/videos?part=snippet%2CcontentDetails%2Cstatistics"
+	infoUrl += fmt.Sprintf("&id=%s", videoid)
+	infoUrl += "&fields=items(contentDetails%2Cid%2Csnippet%2Cstatistics%2Csuggestions)"
+	infoUrl += fmt.Sprintf("&key=%s", API_KEY)
+
+	response, err := http.Get(infoUrl)
 	CheckError(err)
 	defer response.Body.Close()
 	contents, err := ioutil.ReadAll(response.Body)
@@ -209,11 +216,22 @@ func getDuration(videoid string) int {
 	resp := Resp{}
 	err = json.Unmarshal([]byte(contents), &resp)
 	CheckError(err)
+	var v = SongInfo{}
+	v = v.init()
 	if len(resp.Items) < 1 {
-		return -1
+		return v
 	}
-	ISO8601Duration := string(resp.Items[0].ContentDetails.Duration)
-	return ParseISO8601Duration(ISO8601Duration)
+	item := resp.Items[0]
+
+	v.Name = item.Snippet.Title
+	v.Duration = ParseISO8601Duration(string(item.ContentDetails.Duration))
+	v.Thumbnail = item.Snippet.Thumbnails.Default.url
+	v.Views, _ = strconv.Atoi(item.Statistics.Viewcount)
+	v.Likes, _ = strconv.Atoi(item.Statistics.Likecount)
+	v.Dislikes, _ = strconv.Atoi(item.Statistics.Dislikecount)
+	v.Favourites, _ = strconv.Atoi(item.Statistics.Favouritecount)
+	v.Comments, _ = strconv.Atoi(item.Statistics.Commentcount)
+	return v
 }
 
 func ParseISO8601Duration(isoStr string) int {

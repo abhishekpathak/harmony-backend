@@ -29,7 +29,8 @@ func AddHandler(w http.ResponseWriter, r *http.Request) {
 	status := Add(query, user)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if status == true {
-		http.Error(w, "{\"status\":\"error\"}", http.StatusOK)
+		w.Write([]byte("{\"status\":\"success\"}"))
+		w.WriteHeader(http.StatusOK)
 	} else {
 		http.Error(w, "{\"status\":\"error\"}", http.StatusBadRequest)
 	}

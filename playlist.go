@@ -3,40 +3,88 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sort"
 	"strings"
 	"time"
 )
 
+// Song will have all data that Melody requires, nothing more.
 type Song struct {
-	Id      int    `json:"id"`
-	Videoid string `json:"videoid"`
-	Name    string `json:"name"`
-	Length  int    `json:"length"`
-	Seek    int    `json:"seek"`
-	AddedBy string `json:"added_by"`
+	Id        int      `json:"id"`
+	Videoid   string   `json:"videoid"`
+	Name      string   `json:"name"`
+	Length    int      `json:"length"`
+	Seek      int      `json:"seek"`
+	AddedBy   string   `json:"added_by"`
+	Thumbnail string   `json:"thumbnail"`
+	Details   SongInfo `json:"details"`
 }
 
 type Playlist []Song
 
-func (s *Song) init(id int, videoid string, name string, length int, seek int, addedBy string) Song {
-	return Song{
-		Id:      id,
-		Videoid: videoid,
-		Name:    name,
-		Length:  length,
-		Seek:    seek,
-		AddedBy: addedBy,
+func (s Playlist) Len() int {
+	return len(s)
+}
+
+func (s Playlist) Less(i, j int) bool {
+	if s[i].score() <= s[j].score() {
+		return true
+	} else {
+		return false
 	}
 }
 
-func createSong(videoid string, name string) Song {
+func (s Playlist) Swap(i, j int) {
+	temp := s[i]
+	s[i] = s[j]
+	s[j] = temp
+}
+
+func (s *Song) score() int {
+	return s.Details.Views/10000 + (s.Details.Likes-s.Details.Dislikes)/10 + s.Details.Favourites*10 + s.Details.Comments
+}
+
+func getSong(id int) Song {
+	var videoid string
+	var name string
+	var length int
+	var seek int
+	var addedBy string
+	var thumbnail string
+	var songInfo SongInfo
+
+	query := "select * from playlist where id = ?"
+	db := GetDbHandle()
+	defer db.Close()
+	err := db.QueryRow(query, id).Scan(&id, &videoid, &name, &length, &seek, &addedBy, &thumbnail)
+	CheckError(err)
+	query = "select name, duration, thumbnail, views, likes, dislikes, favourites, comments from song_details where videoid = ?"
+	err = db.QueryRow(query, videoid).Scan(&songInfo.Name, &songInfo.Duration, &songInfo.Thumbnail, &songInfo.Views, &songInfo.Likes, &songInfo.Dislikes, &songInfo.Favourites, &songInfo.Comments)
+	CheckError(err)
+
 	return Song{
-		Id:      -1,
-		Videoid: videoid,
-		Name:    name,
-		Length:  getDuration(videoid),
-		Seek:    -5,
-		AddedBy: "system",
+		Id:        id,
+		Videoid:   videoid,
+		Name:      name,
+		Length:    length,
+		Seek:      seek,
+		AddedBy:   addedBy,
+		Thumbnail: thumbnail,
+		Details:   songInfo,
+	}
+}
+
+func createSong(videoid string) Song {
+	details := GetInfo(videoid)
+	return Song{
+		Id:        -1,
+		Videoid:   videoid,
+		Name:      details.Name,
+		Length:    details.Duration,
+		Seek:      -5,
+		AddedBy:   "system",
+		Thumbnail: details.Thumbnail,
+		Details:   details,
 	}
 }
 
@@ -49,7 +97,7 @@ func Truncate() {
 	CheckError(err)
 }
 
-func cleanup(results []Song) []Song {
+func cleanup(results []Song) Playlist {
 	var cleanedResults []Song
 	for i := range results {
 		if results[i].Length != -1 {
@@ -67,42 +115,30 @@ func Seed() {
 	enqueue(seedSong, "system")
 }
 
-func GetPlaylist() Playlist {
-	var id int
-	var videoid string
+func GetPlaylist() []string {
 	var name string
-	var length int
-	var seek int
-	var addedBy string
-	playlist := []Song{}
+	playlist := make([]string, 1)
 	db := GetDbHandle()
 	defer db.Close()
-	rows, err := db.Query("SELECT  * from  playlist order by id")
+	rows, err := db.Query("SELECT name from  playlist order by id")
 	CheckError(err)
 	defer rows.Close()
 	for rows.Next() {
-		err := rows.Scan(&id, &videoid, &name, &length, &seek, &addedBy)
-		var s = Song{}
-		s = s.init(id, videoid, name, length, seek, addedBy)
+		err := rows.Scan(&name)
+		//s := getSong(id)
 		CheckError(err)
-		playlist = append(playlist, s)
+		playlist = append(playlist, name)
 	}
 	return playlist
 }
 
 func CurrentlyPlaying() Song {
 	var id int
-	var videoid string
-	var name string
-	var length int
-	var seek int
-	var addedBy string
 	db := GetDbHandle()
 	defer db.Close()
-	err := db.QueryRow("SELECT * FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek, &addedBy)
+	err := db.QueryRow("SELECT id FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id)
 	CheckError(err)
-	var s = Song{}
-	s = s.init(id, videoid, name, length, seek, addedBy)
+	s := getSong(id)
 	return s
 }
 
@@ -117,17 +153,11 @@ func updateSeek(s Song) {
 
 func getLastSong() Song {
 	var id int
-	var videoid string
-	var name string
-	var length int
-	var seek int
-	var addedBy string
 	db := GetDbHandle()
 	defer db.Close()
-	err := db.QueryRow("SELECT * FROM playlist ORDER BY id DESC LIMIT 1").Scan(&id, &videoid, &name, &length, &seek, &addedBy)
+	err := db.QueryRow("SELECT id FROM playlist ORDER BY id DESC LIMIT 1").Scan(&id)
 	CheckError(err)
-	var s = Song{}
-	lastSong := s.init(id, videoid, name, length, seek, addedBy)
+	lastSong := getSong(id)
 	return lastSong
 }
 
@@ -137,6 +167,10 @@ func enqueue(s Song, agent string) {
 	stmt, err := db.Prepare("INSERT INTO playlist (videoid, name, length, seek, added_by) VALUES (?, ?, ?, ?, ?)")
 	CheckError(err)
 	_, err = stmt.Exec(s.Videoid, s.Name, s.Length, s.Seek, agent)
+	CheckError(err)
+	stmt, err = db.Prepare("REPLACE INTO song_details(videoid, name, duration, thumbnail, views, likes, dislikes,  favourites, comments) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+	CheckError(err)
+	_, err = stmt.Exec(s.Videoid, s.Details.Name, s.Details.Duration, s.Details.Thumbnail, s.Details.Views, s.Details.Likes, s.Details.Dislikes, s.Details.Favourites, s.Details.Comments)
 	CheckError(err)
 }
 
@@ -163,7 +197,7 @@ func Add(query string, user string) bool {
 		query = strings.Replace(query, "https://www.youtube.com/watch?v=", "", 1)
 		query = strings.Replace(query, "http://www.youtube.com/watch?v=", "", 1)
 		query = strings.Replace(query, "www.youtube.com/watch?v=", "", 1)
-		song := createSong(query, GetName(query))
+		song := createSong(query)
 		if song.Length == -1 || user == "" {
 			return false
 		} else {
@@ -205,7 +239,8 @@ func recommend(s Song) Song {
 		searchResults := cleanup(Search(seedQuery))
 		recommendedSong = searchResults[0]
 	} else {
-		songindex := rand.Intn(len(recommendations)-3) + 3
+		sort.Sort(recommendations)
+		songindex := rand.Intn(5)
 		recommendedSong = recommendations[songindex]
 	}
 	return recommendedSong
@@ -215,10 +250,10 @@ func Refresh() {
 	s := CurrentlyPlaying()
 	if s.Seek < s.Length {
 		updateSeek(s)
-		fmt.Println(s.Videoid, "   ", s.Seek, "          ", GetPlaylist())
+		fmt.Println(s.Seek, "          ", GetPlaylist())
 	} else {
 		remove(s)
-		go PostToSlack("#nowplaying " + CurrentlyPlaying().Name)
+		//go PostToSlack("#nowplaying " + CurrentlyPlaying().Name)
 		Refresh()
 	}
 }

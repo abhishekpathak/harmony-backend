@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"os"
 	"time"
 )
 
@@ -15,7 +14,7 @@ var SongID = 0
 
 func play() {
 	//Seed()
-	go PostToSlack("#nowplaying " + CurrentlyPlaying().Name)
+	//go PostToSlack("#nowplaying " + CurrentlyPlaying().Name)
 	ticker := time.NewTicker(time.Second)
 	for _ = range ticker.C {
 		Refresh()
@@ -40,6 +39,7 @@ func PostToSlack(text string) {
 	textPayload := `{"text": ` + text + `"}`
 	data := url.Values{}
 	data.Set("payload", textPayload)
+
 	client := &http.Client{}
 	fmt.Println(urlStr, textPayload)
 	resp, err := client.PostForm(urlStr, data)
@@ -48,10 +48,10 @@ func PostToSlack(text string) {
 }
 
 func GetDbHandle() *sql.DB {
-	DB_HOST := os.Getenv("OPENSHIFT_MYSQL_DB_HOST")
-	DB_PORT := os.Getenv("OPENSHIFT_MYSQL_DB_PORT")
+	DB_HOST := "localhost"
+	DB_PORT := "3306"
 	DB_NAME := "songster"
-	DSN := "root@tcp(" + DB_HOST + ":" + DB_PORT + ")/" + DB_NAME
+	DSN := "songster:songster@tcp(" + DB_HOST + ":" + DB_PORT + ")/" + DB_NAME
 	db, err := sql.Open("mysql", DSN)
 	CheckError(err)
 	return db
