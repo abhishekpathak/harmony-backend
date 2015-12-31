@@ -171,6 +171,7 @@ func GetInfo(videoid string) SongInfo {
 		Description          string
 		Thumbnails           Thumbnail
 		ChannelTitle         string
+		CategoryId           string
 		LiveBroadcastContent string
 		Localized            Localized
 	}
@@ -223,14 +224,16 @@ func GetInfo(videoid string) SongInfo {
 	}
 	item := resp.Items[0]
 
-	v.Name = item.Snippet.Title
-	v.Duration = ParseISO8601Duration(string(item.ContentDetails.Duration))
-	v.Thumbnail = item.Snippet.Thumbnails.Default.url
-	v.Views, _ = strconv.Atoi(item.Statistics.Viewcount)
-	v.Likes, _ = strconv.Atoi(item.Statistics.Likecount)
-	v.Dislikes, _ = strconv.Atoi(item.Statistics.Dislikecount)
-	v.Favourites, _ = strconv.Atoi(item.Statistics.Favouritecount)
-	v.Comments, _ = strconv.Atoi(item.Statistics.Commentcount)
+	if item.Snippet.CategoryId == "10" {
+		v.Name = item.Snippet.Title
+		v.Duration = ParseISO8601Duration(string(item.ContentDetails.Duration))
+		v.Thumbnail = item.Snippet.Thumbnails.Default.url
+		v.Views, _ = strconv.Atoi(item.Statistics.Viewcount)
+		v.Likes, _ = strconv.Atoi(item.Statistics.Likecount)
+		v.Dislikes, _ = strconv.Atoi(item.Statistics.Dislikecount)
+		v.Favourites, _ = strconv.Atoi(item.Statistics.Favouritecount)
+		v.Comments, _ = strconv.Atoi(item.Statistics.Commentcount)
+	}
 	return v
 }
 
