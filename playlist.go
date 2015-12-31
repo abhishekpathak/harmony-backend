@@ -6,6 +6,7 @@ import (
 	"math/rand"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -262,7 +263,7 @@ func recommend(s Song) Song {
 func pprint(songs []Song) string {
 	result := "\n"
 	for i := range songs {
-		result += songs[i].Details.Name + "\t\t" + songs[i].Details.Views
+		result += songs[i].Details.Name + "\t\t" + strconv.Itoa(songs[i].Details.Views)
 		result += "\n"
 	}
 	return result
