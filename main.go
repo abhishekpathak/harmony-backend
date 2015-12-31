@@ -22,9 +22,9 @@ func play() {
 }
 
 func main() {
+	router := NewRouter()
 	go play()
 	go autoAdd()
-	router := NewRouter()
 	log.Fatal(http.ListenAndServe(":25404", router))
 }
 

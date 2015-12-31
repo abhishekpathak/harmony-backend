@@ -2,7 +2,9 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
 	"sort"
 	"strings"
 	"time"
@@ -100,7 +102,7 @@ func Truncate() {
 func cleanup(results []Song) Playlist {
 	var cleanedResults []Song
 	for i := range results {
-		if results[i].Length != -1 {
+		if results[i].Length != -1 && results[i].Details.Views > 45000 {
 			cleanedResults = append(cleanedResults, results[i])
 		}
 	}
@@ -232,18 +234,38 @@ func autoAdd() {
 }
 
 func recommend(s Song) Song {
+
+	f, err := os.OpenFile("/Users/abhishek.p/logs/songster/root.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Printf("error opening file: %v", err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
 	var recommendedSong Song
 	recommendations := cleanup(Recommend(s.Videoid))
+	log.Println("original recommendations : ", pprint(recommendations))
 	if len(recommendations) < 6 {
 		seedQuery := "tum se hi"
 		searchResults := cleanup(Search(seedQuery))
 		recommendedSong = searchResults[0]
 	} else {
 		sort.Sort(recommendations)
+		log.Println("sorted recommendations : ", pprint(recommendations))
 		songindex := rand.Intn(5)
 		recommendedSong = recommendations[songindex]
 	}
+	log.Println("song selected : ", recommendedSong.Details.Name)
 	return recommendedSong
+}
+
+func pprint(songs []Song) string {
+	result := "\n"
+	for i := range songs {
+		result += songs[i].Details.Name
+		result += "\n"
+	}
+	return result
 }
 
 func Refresh() {
