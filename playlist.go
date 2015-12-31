@@ -255,14 +255,14 @@ func recommend(s Song) Song {
 		songindex := rand.Intn(5)
 		recommendedSong = recommendations[songindex]
 	}
-	log.Println("song selected : ", recommendedSong.Details.Name)
+	log.Println("song selected : ", recommendedSong.Details.Name, recommendedSong.Details.Views)
 	return recommendedSong
 }
 
 func pprint(songs []Song) string {
 	result := "\n"
 	for i := range songs {
-		result += songs[i].Details.Name
+		result += songs[i].Details.Name + "\t\t" + songs[i].Details.Views
 		result += "\n"
 	}
 	return result
