@@ -1,11 +1,9 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
-	"os"
 	"time"
 )
 
@@ -14,13 +12,6 @@ func NewRouter() *mux.Router {
 	for _, route := range routes {
 		handler := route.HandlerFunc
 		handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-			f, err := os.OpenFile("/Users/abhishek.p/logs/songster/root.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-			if err != nil {
-				fmt.Printf("error opening file: %v", err)
-			}
-			defer f.Close()
-			log.SetOutput(f)
 
 			start := time.Now()
 			handler.ServeHTTP(w, r)
