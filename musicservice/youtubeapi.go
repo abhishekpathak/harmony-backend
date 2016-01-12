@@ -1,40 +1,20 @@
-package main
+package musicservice
 
 import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
+	"math/rand"
 	"net/http"
 	"net/url"
+	"os"
+	"sort"
 	"strconv"
 	"strings"
 )
 
 const API_KEY = "AIzaSyCbfxhEDNKXXPFbmjttsqFvGHxjvTlfVxg"
-
-type SongInfo struct {
-	Name       string
-	Duration   int
-	Thumbnail  string
-	Views      int
-	Likes      int
-	Dislikes   int
-	Favourites int
-	Comments   int
-}
-
-func (v *SongInfo) init() SongInfo {
-	return SongInfo{
-		Name:       "not found",
-		Duration:   -1,
-		Thumbnail:  "not found",
-		Views:      -1,
-		Likes:      -1,
-		Dislikes:   -1,
-		Favourites: -1,
-		Comments:   -1,
-	}
-}
 
 func Search(query string) []Song {
 	type Id struct {
@@ -87,12 +67,12 @@ func Search(query string) []Song {
 	searchResults := []Song{}
 
 	for _, item := range resp.Items {
-		searchResults = append(searchResults, createSong(item.Id.VideoId))
+		searchResults = append(searchResults, CreateSong(item.Id.VideoId))
 	}
-	return searchResults
+	return cleanup(searchResults)
 }
 
-func Recommend(videoid string) []Song {
+func getRecommendedResults(videoid string) Playlist {
 	type Id struct {
 		Kind    string
 		VideoId string
@@ -143,9 +123,9 @@ func Recommend(videoid string) []Song {
 	recommendations := []Song{}
 
 	for _, item := range resp.Items {
-		recommendations = append(recommendations, createSong(item.Id.VideoId))
+		recommendations = append(recommendations, CreateSong(item.Id.VideoId))
 	}
-	return recommendations
+	return cleanup(recommendations)
 }
 
 func GetInfo(videoid string) SongInfo {
@@ -226,7 +206,7 @@ func GetInfo(videoid string) SongInfo {
 
 	if item.Snippet.CategoryId == "10" {
 		v.Name = item.Snippet.Title
-		v.Duration = ParseISO8601Duration(string(item.ContentDetails.Duration))
+		v.Duration = parseISO8601Duration(string(item.ContentDetails.Duration))
 		v.Thumbnail = item.Snippet.Thumbnails.Default.url
 		v.Views, _ = strconv.Atoi(item.Statistics.Viewcount)
 		v.Likes, _ = strconv.Atoi(item.Statistics.Likecount)
@@ -237,7 +217,7 @@ func GetInfo(videoid string) SongInfo {
 	return v
 }
 
-func ParseISO8601Duration(isoStr string) int {
+func parseISO8601Duration(isoStr string) int {
 	//PT6M11S
 	//PT41M44S
 	//PT1H18M27S
@@ -263,4 +243,69 @@ func ParseISO8601Duration(isoStr string) int {
 		duration = -1
 	}
 	return duration
+}
+
+func cleanup(results []Song) []Song {
+	var cleanedResults []Song
+	for i := range results {
+		if results[i].Length != -1 && results[i].Details.Views > 45000 {
+			cleanedResults = append(cleanedResults, results[i])
+		}
+	}
+	return cleanedResults
+}
+
+func CreateSong(videoid string) Song {
+	details := GetInfo(videoid)
+	return Song{
+		Id:        -1,
+		Videoid:   videoid,
+		Name:      details.Name,
+		Length:    details.Duration,
+		Seek:      -5,
+		AddedBy:   "system",
+		Thumbnail: details.Thumbnail,
+		Details:   details,
+	}
+}
+
+func Recommend(s Song) Song {
+	f, err := os.OpenFile("/Users/abhishek.p/logs/songster/root.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	if err != nil {
+		fmt.Printf("error opening file: %v", err)
+	}
+	defer f.Close()
+	log.SetOutput(f)
+
+	var recommendedSong Song
+	recommendations := getRecommendedResults(s.Videoid)
+	log.Println("original recommendations : ", pprint(recommendations))
+	if len(recommendations) < 6 {
+		seedQuery := "tum se hi"
+		searchResults := Search(seedQuery)
+		recommendedSong = searchResults[0]
+	} else {
+		// sort in the reverse order, so that highest scores come first
+		sort.Sort(sort.Reverse(recommendations))
+		log.Println("sorted recommendations : ", pprint(recommendations))
+		songindex := rand.Intn(5)
+		recommendedSong = recommendations[songindex]
+	}
+	log.Println("song selected : ", recommendedSong.Details.Name, recommendedSong.Details.Views, recommendedSong.Score())
+	return recommendedSong
+}
+
+func CheckError(err error) {
+	if err != nil {
+		panic(err.Error())
+	}
+}
+
+func pprint(songs []Song) string {
+	result := "\n"
+	for i := range songs {
+		result += songs[i].Details.Name + "\t\t" + strconv.Itoa(songs[i].Details.Views)
+		result += "\n"
+	}
+	return result
 }

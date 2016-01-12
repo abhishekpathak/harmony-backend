@@ -13,7 +13,6 @@ alter table playlist add column thumbnail varchar(255) not null default "NA";
 
 create table play_history(
 videoid varchar(100) PRIMARY KEY,
-name varchar(255),
 playcount int,
 last_played datetime
 );
@@ -34,5 +33,6 @@ views bigint not null,
 likes int not null,
 dislikes int not null,
 favourites int not null,
-comments int not null
+comments int not null,
+score decimal(7,2) not null default 0
 );

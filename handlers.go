@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 )
 
@@ -11,7 +10,6 @@ func CurrentlyPlayingHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	song := CurrentlyPlaying()
-	fmt.Println(song)
 	json.NewEncoder(w).Encode(song)
 }
 
@@ -26,7 +24,7 @@ func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
 func AddHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.FormValue("q")
 	user := r.FormValue("user")
-	status := Add(query, user)
+	status := UserAdd(query, user)
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if status == true {
 		w.Write([]byte("{\"status\":\"success\"}"))
