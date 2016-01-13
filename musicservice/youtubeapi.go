@@ -270,7 +270,9 @@ func CreateSong(videoid string) Song {
 }
 
 func Recommend(s Song) Song {
-	f, err := os.OpenFile("/Users/abhishek.p/logs/songster/root.log", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+	HOME_DIR := os.Getenv("HOME")
+	logfile := HOME_DIR + "/logs/songster/root.log"
+	f, err := os.OpenFile(logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
 		fmt.Printf("error opening file: %v", err)
 	}
