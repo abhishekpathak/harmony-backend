@@ -306,7 +306,7 @@ func CheckError(err error) {
 func pprint(songs []Song) string {
 	result := "\n"
 	for i := range songs {
-		result += songs[i].Details.Name + "\t\t" + strconv.FormatFloat(float64(songs[i].Score()), 'E', -1, 32)
+		result += songs[i].Details.Name + "\t\t" + strconv.FormatFloat(songs[i].Score(), 'f', 2, 64)
 		result += "\n"
 	}
 	return result

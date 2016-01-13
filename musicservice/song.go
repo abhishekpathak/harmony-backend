@@ -11,13 +11,13 @@ type Song struct {
 	Details   SongInfo `json:"details"`
 }
 
-func (s *Song) Score() float32 {
-	var score float32
+func (s *Song) Score() float64 {
+	var score float64
 	defer func() {
 		if err := recover(); err != nil {
-			score = -1.0
+			score = -1.00
 		}
 	}()
-	score = float32(((s.Details.Likes - s.Details.Dislikes) / s.Details.Likes))
+	score = float64(s.Details.Likes-s.Details.Dislikes) * 100.00 / float64(s.Details.Likes)
 	return score
 }
