@@ -12,7 +12,7 @@ type Song struct {
 }
 
 func (s *Song) Score() float32 {
-	var score int
+	var score float32
 	defer func() {
 		if err := recover(); err != nil {
 			score = -1.0
