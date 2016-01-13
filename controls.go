@@ -54,7 +54,7 @@ func seed() {
 }
 
 func GetPlaylist() []musicservice.Song {
-	playlist := make([]musicservice.Song, 1, 10)
+	var playlist []musicservice.Song
 	ids := currentPlaylistIds()
 	for id := range ids {
 		playlist = append(playlist, getSong(id))

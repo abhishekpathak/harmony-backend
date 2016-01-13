@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/HarmonyProject/songster/musicservice"
 )
 
@@ -90,7 +91,7 @@ func updateSeek(id int) {
 
 func currentPlaylistIds() []int {
 	var id int
-	var ids = make([]int, 1, 10)
+	var ids []int
 	db := GetDbHandle()
 	defer db.Close()
 	rows, err := db.Query("SELECT id from  playlist order by id")
@@ -98,10 +99,12 @@ func currentPlaylistIds() []int {
 	defer rows.Close()
 	for rows.Next() {
 		err := rows.Scan(&id)
-		if err == nil {
-			ids = append(ids, id)
+		if err != nil {
+			fmt.Println(err.Error())
 		}
+		ids = append(ids, id)
 	}
+	fmt.Println(ids)
 	return ids
 }
 
