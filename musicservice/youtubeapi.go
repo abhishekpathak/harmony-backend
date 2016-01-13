@@ -293,7 +293,7 @@ func Recommend(s Song) Song {
 		songindex := rand.Intn(5)
 		recommendedSong = recommendations[songindex]
 	}
-	log.Println("song selected : ", recommendedSong.Details.Name, recommendedSong.Details.Views, recommendedSong.Score())
+	log.Println("song selected : ", recommendedSong.Details.Name)
 	return recommendedSong
 }
 
@@ -306,7 +306,7 @@ func CheckError(err error) {
 func pprint(songs []Song) string {
 	result := "\n"
 	for i := range songs {
-		result += songs[i].Details.Name + "\t\t" + strconv.Itoa(songs[i].Details.Views)
+		result += songs[i].Details.Name + "\t\t" + strconv.FormatFloat(songs[i].Details.Score(), 'E', -1, 32)
 		result += "\n"
 	}
 	return result

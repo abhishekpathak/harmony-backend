@@ -104,7 +104,6 @@ func currentPlaylistIds() []int {
 		}
 		ids = append(ids, id)
 	}
-	fmt.Println(ids)
 	return ids
 }
 
