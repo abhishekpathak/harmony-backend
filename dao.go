@@ -90,7 +90,7 @@ func updateSeek(id int) {
 
 func currentPlaylistIds() []int {
 	var id int
-	var ids = make([]int, 1, 2)
+	var ids = make([]int, 1, 10)
 	db := GetDbHandle()
 	defer db.Close()
 	rows, err := db.Query("SELECT id from  playlist order by id")

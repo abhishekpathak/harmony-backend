@@ -12,5 +12,12 @@ type Song struct {
 }
 
 func (s *Song) Score() int {
-	return ((s.Details.Likes - s.Details.Dislikes) / s.Details.Likes)
+	var score int
+	defer func() {
+		if err := recover(); err != nil {
+			score = -1
+		}
+	}()
+	score = ((s.Details.Likes - s.Details.Dislikes) / s.Details.Likes)
+	return score
 }
