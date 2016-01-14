@@ -281,7 +281,6 @@ func Recommend(s Song) Song {
 
 	var recommendedSong Song
 	recommendations := getRecommendedResults(s.Videoid)
-	log.Println("original recommendations : ", pprint(recommendations))
 	if len(recommendations) < 6 {
 		seedQuery := "tum se hi"
 		searchResults := Search(seedQuery)

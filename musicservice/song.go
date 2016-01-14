@@ -15,9 +15,12 @@ func (s *Song) Score() float64 {
 	var score float64
 	defer func() {
 		if err := recover(); err != nil {
-			score = -1.00
+			score = -100.00
 		}
 	}()
-	score = float64(s.Details.Likes-s.Details.Dislikes) * 100.00 / float64(s.Details.Likes)
+	likes := float64(s.Details.Likes)
+	dislikes := float64(s.Details.Dislikes)
+	views := float64(s.Details.Views)
+	score = (likes * 100.00 / views) - (dislikes / likes)
 	return score
 }
