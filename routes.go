@@ -36,4 +36,10 @@ var routes = Routes{
 		"/skip",
 		SkipHandler,
 	},
+	Route{
+		"QueryResults",
+		"GET",
+		"/query",
+		QueryHandler,
+	},
 }

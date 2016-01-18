@@ -4,11 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"net/url"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -270,15 +268,6 @@ func CreateSong(videoid string) Song {
 }
 
 func Recommend(s Song) Song {
-	HOME_DIR := os.Getenv("HOME")
-	logfile := HOME_DIR + "/logs/songster/root.log"
-	f, err := os.OpenFile(logfile, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		fmt.Printf("error opening file: %v", err)
-	}
-	defer f.Close()
-	log.SetOutput(f)
-
 	var recommendedSong Song
 	recommendations := getRecommendedResults(s.Videoid)
 	if len(recommendations) < 6 {
@@ -288,11 +277,9 @@ func Recommend(s Song) Song {
 	} else {
 		// sort in the reverse order, so that highest scores come first
 		sort.Sort(sort.Reverse(recommendations))
-		log.Println("sorted recommendations : ", pprint(recommendations))
 		songindex := rand.Intn(5)
 		recommendedSong = recommendations[songindex]
 	}
-	log.Println("song selected : ", recommendedSong.Details.Name)
 	return recommendedSong
 }
 

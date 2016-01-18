@@ -39,3 +39,12 @@ func SkipHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Write([]byte("{\"status\":\"success\"}"))
 }
+
+func QueryHandler(w http.ResponseWriter, r *http.Request) {
+	query := r.FormValue("q")
+	matchedResults := getQueryResults(query)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(matchedResults)
+}

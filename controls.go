@@ -80,6 +80,19 @@ func getVideoid(youtubeLink string) string {
 	return videoid
 }
 
+func getQueryResults(query string) []musicservice.Song {
+	var songs []musicservice.Song
+	if strings.Contains(query, "www.youtube.com/watch?v=") {
+		song := musicservice.CreateSong(getVideoid(query))
+		if song.Length != -1 {
+			songs = append(songs, song)
+		}
+	} else {
+		songs = musicservice.Search(query)
+	}
+	return songs
+}
+
 func UserAdd(query string, user string) bool {
 	if strings.Contains(query, "www.youtube.com/watch?v=") {
 		song := musicservice.CreateSong(getVideoid(query))
@@ -93,12 +106,6 @@ func UserAdd(query string, user string) bool {
 	searchResults := musicservice.Search(query)
 	if len(searchResults) == 0 {
 		return false
-	}
-	for i := range searchResults {
-		if searchResults[i].Name == query {
-			enqueue(searchResults[i], user)
-			return true
-		}
 	}
 	enqueue(searchResults[0], user)
 	return true
