@@ -42,4 +42,10 @@ var routes = Routes{
 		"/query",
 		QueryHandler,
 	},
+	Route{
+		"LastSong",
+		"GET",
+		"/lastsong",
+		LastSongHandler,
+	},
 }

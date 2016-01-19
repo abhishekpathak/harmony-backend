@@ -1,8 +1,10 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/HarmonyProject/songster/musicservice"
+	"log"
 )
 
 func addToPlaylist(s musicservice.Song, agent string) {
@@ -123,4 +125,21 @@ func UpdateSongdetails(s musicservice.Song) {
 	CheckError(err)
 	_, err = stmt.Exec(s.Videoid, s.Details.Name, s.Details.Duration, s.Details.Thumbnail, s.Details.Views, s.Details.Likes, s.Details.Dislikes, s.Details.Favourites, s.Details.Comments, s.Score())
 	CheckError(err)
+}
+
+func getLastPlaying(userId string) musicservice.LibSong {
+	var l musicservice.LibSong
+	db := GetDbHandle()
+	defer db.Close()
+	err := db.QueryRow("SELECT videoid, artist, track, rating, fav from library where user = ? order by last_played desc limit 1", userId).Scan(&l.Videoid, &l.Artist, &l.Track, &l.Rating, &l.Fav)
+	fmt.Println(s.Videoid)
+	switch {
+	case err == sql.ErrNoRows:
+		log.Printf("No user with that ID.")
+		break
+	case err != nil:
+		log.Fatal(err)
+		break
+	}
+	return l
 }

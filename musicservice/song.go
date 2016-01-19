@@ -11,6 +11,14 @@ type Song struct {
 	Details   SongInfo `json:"details"`
 }
 
+type LibSong struct {
+	Videoid string `json:"videoid"`
+	Artist  string `json:"artist"`
+	Track   string `json:"track"`
+	Rating  int    `json:"rating"`
+	Fav     bool   `json:"fav"`
+}
+
 func (s *Song) Score() float64 {
 	var score float64
 	defer func() {
