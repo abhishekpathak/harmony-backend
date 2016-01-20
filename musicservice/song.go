@@ -19,6 +19,11 @@ type LibSong struct {
 	Fav     bool   `json:"fav"`
 }
 
+type User struct {
+	Name string `json:"name"`
+	Id   string `json:"id"`
+}
+
 func (s *Song) Score() float64 {
 	var score float64
 	defer func() {

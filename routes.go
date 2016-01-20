@@ -48,4 +48,16 @@ var routes = Routes{
 		"/lastsong",
 		LastSongHandler,
 	},
+	Route{
+		"UpdateLibrary",
+		"GET",
+		"/library",
+		LibraryHandler,
+	},
+	Route{
+		"Song Exists",
+		"GET",
+		"/library/songexists",
+		SongExistsHandler,
+	},
 }

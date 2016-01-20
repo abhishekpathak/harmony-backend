@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 )
 
 func CurrentlyPlayingHandler(w http.ResponseWriter, r *http.Request) {
@@ -34,6 +35,18 @@ func AddHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func LibraryHandler(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	status := UpdateLibrary(r.Form)
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if status == true {
+		w.Write([]byte("{\"status\":\"success\"}"))
+		w.WriteHeader(http.StatusOK)
+	} else {
+		http.Error(w, "{\"status\":\"error\"}", http.StatusBadRequest)
+	}
+}
+
 func SkipHandler(w http.ResponseWriter, r *http.Request) {
 	Skip()
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -56,4 +69,14 @@ func LastSongHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(lastSong)
+}
+
+func SongExistsHandler(w http.ResponseWriter, r *http.Request) {
+	userid := r.FormValue("userid")
+	videoid := r.FormValue("videoid")
+	status := songExistsInLibrary(userid, videoid)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("{\"status\":" + strconv.FormatBool(status) + "}"))
 }

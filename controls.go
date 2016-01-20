@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/HarmonyProject/songster/musicservice"
 	"net/url"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,7 +33,7 @@ func refresh() {
 	s := CurrentlyPlaying()
 	if s.Seek < s.Length {
 		updateSeek(s.Id)
-		fmt.Printf("\r%d/%d - %s  ", s.Seek, s.Length, s.Name)
+		//fmt.Printf("\r%d/%d - %s  ", s.Seek, s.Length, s.Name)
 	} else {
 		remove(s)
 		refresh()
@@ -121,4 +122,32 @@ func autoAdd() {
 			enqueue(newSong, "system")
 		}
 	}
+}
+
+func UpdateLibrary(form url.Values) bool {
+	status := false
+	var song musicservice.LibSong
+	song.Videoid = form.Get("songvideoid")
+	song.Artist = form.Get("songartist")
+	song.Track = form.Get("songtrack")
+	song.Rating, _ = strconv.Atoi(form.Get("songrating"))
+	if form.Get("songfav") == "0" {
+		song.Fav = false
+	} else {
+		song.Fav = true
+	}
+
+	var user musicservice.User
+	user.Name = form.Get("username")
+	user.Id = form.Get("userid")
+
+	operation := form.Get("operation")
+
+	if operation == "add" {
+		status = addToLibrary(song, user)
+	} else if operation == "remove" {
+		status = removeFromLibrary(song, user)
+	}
+
+	return status
 }

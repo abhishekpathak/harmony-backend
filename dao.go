@@ -132,7 +132,6 @@ func getLastPlaying(userId string) musicservice.LibSong {
 	db := GetDbHandle()
 	defer db.Close()
 	err := db.QueryRow("SELECT videoid, artist, track, rating, fav from library where user = ? order by last_played desc limit 1", userId).Scan(&l.Videoid, &l.Artist, &l.Track, &l.Rating, &l.Fav)
-	fmt.Println(s.Videoid)
 	switch {
 	case err == sql.ErrNoRows:
 		log.Printf("No user with that ID.")
@@ -142,4 +141,45 @@ func getLastPlaying(userId string) musicservice.LibSong {
 		break
 	}
 	return l
+}
+
+func addToLibrary(s musicservice.LibSong, u musicservice.User) bool {
+	status := false
+	db := GetDbHandle()
+	defer db.Close()
+	stmt, err := db.Prepare("insert into library(userid, username, videoid, artist, track, rating, fav) VALUES (?, ?, ?, ?, ?, ?, ?)")
+	if err == nil {
+		_, err = stmt.Exec(u.Id, u.Name, s.Videoid, s.Artist, s.Track, s.Rating, s.Fav)
+		if err == nil {
+			status = true
+		}
+	}
+	return status
+}
+
+func removeFromLibrary(s musicservice.LibSong, u musicservice.User) bool {
+	status := false
+	db := GetDbHandle()
+	defer db.Close()
+	stmt, err := db.Prepare("delete from library where userid = ? and videoid = ?")
+	if err == nil {
+		_, err = stmt.Exec(u.Id, s.Videoid)
+		if err == nil {
+			status = true
+		}
+	}
+	return status
+}
+
+func songExistsInLibrary(userid string, videoid string) bool {
+	status := false
+	var size int
+	db := GetDbHandle()
+	defer db.Close()
+	err := db.QueryRow("SELECT count(*) FROM library where userid = ? and videoid = ?", userid, videoid).Scan(&size)
+	fmt.Println(size)
+	if err == nil && size > 0 {
+		status = true
+	}
+	return status
 }
