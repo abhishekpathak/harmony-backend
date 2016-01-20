@@ -131,7 +131,7 @@ func getLastPlaying(userId string) musicservice.LibSong {
 	var l musicservice.LibSong
 	db := GetDbHandle()
 	defer db.Close()
-	err := db.QueryRow("SELECT videoid, artist, track, rating, fav from library where user = ? order by last_played desc limit 1", userId).Scan(&l.Videoid, &l.Artist, &l.Track, &l.Rating, &l.Fav)
+	err := db.QueryRow("SELECT videoid, artist, track, rating, fav from library where userid = ? order by last_played desc limit 1", userId).Scan(&l.Videoid, &l.Artist, &l.Track, &l.Rating, &l.Fav)
 	switch {
 	case err == sql.ErrNoRows:
 		log.Printf("No user with that ID.")
