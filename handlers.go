@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/HarmonyProject/songster/musicservice"
 	"net/http"
 	"strconv"
 )
@@ -79,4 +80,33 @@ func SongExistsHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("{\"status\":" + strconv.FormatBool(status) + "}"))
+}
+
+func SongFromLibraryHandler(w http.ResponseWriter, r *http.Request) {
+	userid := r.FormValue("userid")
+	fav := r.FormValue("fav")
+	var libSongObj musicservice.LibSong
+	if fav == "true" {
+		libSongObj = favSongFromLibrary(userid)
+	} else {
+		libSongObj = randomSongFromLibrary(userid)
+	}
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(libSongObj)
+}
+
+func UpdateLibraryTimestampHandler(w http.ResponseWriter, r *http.Request) {
+	userid := r.FormValue("userid")
+	videoid := r.FormValue("videoid")
+	status := updateLastPlayedTimestamp(userid, videoid)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if status == true {
+		w.Write([]byte("{\"status\":\"success\"}"))
+		w.WriteHeader(http.StatusOK)
+	} else {
+		http.Error(w, "{\"status\":\"error\"}", http.StatusBadRequest)
+	}
 }

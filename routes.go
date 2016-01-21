@@ -60,4 +60,16 @@ var routes = Routes{
 		"/library/songexists",
 		SongExistsHandler,
 	},
+	Route{
+		"PlayFromLibrary",
+		"GET",
+		"/library/get",
+		SongFromLibraryHandler,
+	},
+	Route{
+		"UpdateLibraryTimestamp",
+		"GET",
+		"/library/updatelastplayed",
+		UpdateLibraryTimestampHandler,
+	},
 }

@@ -183,3 +183,39 @@ func songExistsInLibrary(userid string, videoid string) bool {
 	}
 	return status
 }
+
+func favSongFromLibrary(userid string) musicservice.LibSong {
+	libSongObj := musicservice.LibSong{}
+	db := GetDbHandle()
+	defer db.Close()
+	err := db.QueryRow("SELECT videoid, artist, track, rating, fav FROM library where userid = ? and fav = true and last_played not in(select max(last_played) from library where userid = ?) order by rand() limit 1", userid, userid).Scan(&libSongObj.Videoid, &libSongObj.Artist, &libSongObj.Track, &libSongObj.Rating, &libSongObj.Fav)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return libSongObj
+}
+
+func randomSongFromLibrary(userid string) musicservice.LibSong {
+	libSongObj := musicservice.LibSong{}
+	db := GetDbHandle()
+	defer db.Close()
+	err := db.QueryRow("SELECT videoid, artist, track, rating, fav FROM library where userid = ? and last_played not in(select max(last_played) from library where userid = ?) order by rand() limit 1", userid, userid).Scan(&libSongObj.Videoid, &libSongObj.Artist, &libSongObj.Track, &libSongObj.Rating, &libSongObj.Fav)
+	if err != nil {
+		fmt.Println(err)
+	}
+	return libSongObj
+}
+
+func updateLastPlayedTimestamp(userid string, videoid string) bool {
+	status := false
+	db := GetDbHandle()
+	defer db.Close()
+	stmt, err := db.Prepare("update library set last_played = current_timestamp where userid = ? and videoid = ?")
+	if err == nil {
+		_, err = stmt.Exec(userid, videoid)
+		if err == nil {
+			status = true
+		}
+	}
+	return status
+}
