@@ -1,75 +1,48 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
 
-type Route struct {
-	Name        string
-	Method      string
-	Pattern     string
-	HandlerFunc http.HandlerFunc
+	"github.com/unbxd/goji/web/middleware"
+	"github.com/zenazn/goji/web"
+)
+
+func RadioRoutes(route *web.Mux) *web.Mux {
+	var radio *radioH
+	route.Use(middleware.SubRouter)
+	route.Use(setCORSmw)
+	route.Use(setJsonContentType)
+	route.Get("playlist/currentlyplaying", radio.currentlyPlaying)
+	route.Get("playlist", radio.playlist)
+	route.Post("add", radio.add)
+	route.Post("skip", radio.skip)
+	route.Get("query", radio.query)
+	route.Get("lastsong", radio.lastSong)
+	return route
 }
 
-type Routes []Route
+func LibraryRoutes(route *web.Mux) *web.Mux {
+	var lib *libH
+	route.Use(middleware.SubRouter)
+	route.Use(setCORSmw)
+	route.Use(setJsonContentType)
+	route.Get("update", lib.library)
+	route.Get("songexists", lib.songExists)
+	route.Get("get", lib.songFromLib)
+	route.Get("updatelastplayed", lib.updateLibTimestamp)
+	return route
+}
 
-var routes = Routes{
-	Route{
-		"CurrentlyPlaying",
-		"GET",
-		"/playlist/currentlyplaying",
-		CurrentlyPlayingHandler,
-	},
-	Route{
-		"Playlist",
-		"GET",
-		"/playlist",
-		PlaylistHandler,
-	},
-	Route{
-		"Add",
-		"POST",
-		"/add",
-		AddHandler,
-	},
-	Route{
-		"Skip",
-		"POST",
-		"/skip",
-		SkipHandler,
-	},
-	Route{
-		"QueryResults",
-		"GET",
-		"/query",
-		QueryHandler,
-	},
-	Route{
-		"LastSong",
-		"GET",
-		"/lastsong",
-		LastSongHandler,
-	},
-	Route{
-		"UpdateLibrary",
-		"GET",
-		"/library",
-		LibraryHandler,
-	},
-	Route{
-		"Song Exists",
-		"GET",
-		"/library/songexists",
-		SongExistsHandler,
-	},
-	Route{
-		"PlayFromLibrary",
-		"GET",
-		"/library/get",
-		SongFromLibraryHandler,
-	},
-	Route{
-		"UpdateLibraryTimestamp",
-		"GET",
-		"/library/updatelastplayed",
-		UpdateLibraryTimestampHandler,
-	},
+func setCORSmw(context *web.C, handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		handler.ServeHTTP(w, r)
+	})
+}
+
+func setJsonContentType(context *web.C, handler http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+		handler.ServeHTTP(w, r)
+	})
 }
