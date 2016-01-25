@@ -114,7 +114,7 @@ func UserAdd(query string, user string) bool {
 
 func autoAdd() {
 	ticker := time.NewTicker(time.Second * 5)
-	for _ = range ticker.C {
+	for range ticker.C {
 		c := CurrentlyPlaying()
 		timeRemaining := c.Length - c.Seek
 		if playlistSize() == 1 && timeRemaining < 30 {
