@@ -2,16 +2,27 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/zenazn/goji/web"
 )
 
 func main() {
-	router := NewRouter()
 	go play()
 	go autoAdd()
-	log.Fatal(http.ListenAndServe(":25404", router))
+
+	router := web.New()
+
+	router.Handle("/radio/*", RadioRoutes(web.New())) // Radio Sub-Router
+	router.Handle("/library", http.RedirectHandler("/library/update", http.StatusMovedPermanently))
+	router.Handle("/library/*", LibraryRoutes(web.New())) // Radio Sub-Router
+
+	err := http.ListenAndServe(":25404", router)
+	if err != nil {
+		log.Fatal("Error Starting Server", err)
+	}
 }
 
 func CheckError(err error) {
