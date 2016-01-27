@@ -72,4 +72,10 @@ var routes = Routes{
 		"/library/updatelastplayed",
 		UpdateLibraryTimestampHandler,
 	},
+	Route{
+		"GetRecommendedSongs",
+		"GET",
+		"/recommendations",
+		RecommendationHandler,
+	},
 }

@@ -110,3 +110,12 @@ func UpdateLibraryTimestampHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "{\"status\":\"error\"}", http.StatusBadRequest)
 	}
 }
+
+func RecommendationHandler(w http.ResponseWriter, r *http.Request) {
+	videoid := r.FormValue("q")
+	recommendedSongs := musicservice.RecommendMulti(videoid)
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(recommendedSongs)
+}

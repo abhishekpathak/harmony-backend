@@ -267,6 +267,13 @@ func CreateSong(videoid string) Song {
 	}
 }
 
+func RecommendMulti(videoid string) []Song {
+	recommendations := getRecommendedResults(videoid)
+	// sort in the reverse order, so that highest scores come first
+	sort.Sort(sort.Reverse(recommendations))
+	return recommendations
+}
+
 func Recommend(s Song) Song {
 	var recommendedSong Song
 	recommendations := getRecommendedResults(s.Videoid)
