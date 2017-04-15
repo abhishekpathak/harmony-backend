@@ -2,10 +2,13 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
 
@@ -14,12 +17,13 @@ func main() {
 	for _, route := range routes {
 		router.HandleFunc(route.Path, route.HandlerFunc).Methods(route.Method)
 	}
-	log.Fatal(http.ListenAndServe(":25404", router))
+	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
+	log.Fatal(http.ListenAndServe(":25404", loggedRouter))
 }
 
 func CheckError(err error) {
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err)
 	}
 }
 

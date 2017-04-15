@@ -13,30 +13,6 @@ type Routes []Route
 
 var routes = Routes{
 	Route{
-		"CurrentlyPlaying",
-		"GET",
-		"/playlist/currentlyplaying",
-		CurrentlyPlayingHandler,
-	},
-	Route{
-		"Playlist",
-		"GET",
-		"/playlist",
-		PlaylistHandler,
-	},
-	Route{
-		"Add",
-		"POST",
-		"/add",
-		AddHandler,
-	},
-	Route{
-		"Skip",
-		"POST",
-		"/skip",
-		SkipHandler,
-	},
-	Route{
 		"QueryResults",
 		"GET",
 		"/query",

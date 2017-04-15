@@ -292,7 +292,7 @@ func Recommend(s Song) Song {
 
 func CheckError(err error) {
 	if err != nil {
-		panic(err.Error())
+		fmt.Println(err)
 	}
 }
 

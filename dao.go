@@ -1,187 +1,43 @@
 package main
 
-import (
-	"database/sql"
-	"fmt"
-	"github.com/HarmonyProject/songster/musicservice"
-	"log"
-)
-
-func addToPlaylist(s musicservice.Song, agent string) {
-	db := GetDbHandle()
-	defer db.Close()
-	stmt, err := db.Prepare("INSERT INTO playlist (videoid, name, length, seek, added_by) VALUES (?, ?, ?, ?, ?)")
-	CheckError(err)
-	_, err = stmt.Exec(s.Videoid, s.Name, s.Length, s.Seek, agent)
-	CheckError(err)
-}
-
-func getSong(id int) musicservice.Song {
-	/*
-		var videoid string
-		var name string
-		var length int
-		var seek int
-		var addedBy string
-		var thumbnail string
-	*/
-	var song = musicservice.Song{}
-	query := "select * from playlist where id = ?"
-	db := GetDbHandle()
-	defer db.Close()
-	err := db.QueryRow(query, id).Scan(&song.Id, &song.Videoid, &song.Name, &song.Length, &song.Seek, &song.AddedBy, &song.Thumbnail)
-	CheckError(err)
-	song.Details = getSongDetails(song.Videoid)
-	return song
-}
-
-func getSongDetails(videoid string) musicservice.SongInfo {
-	var songInfo = musicservice.SongInfo{}
-	query := "select name, duration, thumbnail, views, likes, dislikes, favourites, comments from song_details where videoid = ?"
-	db := GetDbHandle()
-	defer db.Close()
-	err := db.QueryRow(query, videoid).Scan(&songInfo.Name, &songInfo.Duration, &songInfo.Thumbnail, &songInfo.Views, &songInfo.Likes, &songInfo.Dislikes, &songInfo.Favourites, &songInfo.Comments)
-	CheckError(err)
-	return songInfo
-}
-
-func firstSongId() int {
-	var id int
-	db := GetDbHandle()
-	defer db.Close()
-	err := db.QueryRow("SELECT id FROM playlist ORDER BY id ASC LIMIT 1").Scan(&id)
-	CheckError(err)
-	return id
-}
-
-func lastSongId() int {
-	var id int
-	db := GetDbHandle()
-	defer db.Close()
-	err := db.QueryRow("SELECT id FROM playlist ORDER BY id DESC LIMIT 1").Scan(&id)
-	CheckError(err)
-	return id
-}
-
-func clearPlaylist() {
-	db := GetDbHandle()
-	defer db.Close()
-	stmt, err := db.Prepare("TRUNCATE playlist")
-	CheckError(err)
-	_, err = stmt.Exec()
-	CheckError(err)
-}
-
-func removeFromPlaylist(id int) {
-	db := GetDbHandle()
-	defer db.Close()
-	stmt, err := db.Prepare("DELETE FROM playlist WHERE id = ?")
-	CheckError(err)
-	_, err = stmt.Exec(id)
-	CheckError(err)
-
-}
-
-func updateSeek(id int) {
-	db := GetDbHandle()
-	defer db.Close()
-	stmt, err := db.Prepare("UPDATE playlist SET seek = seek + 1 WHERE id = ?")
-	CheckError(err)
-	_, err = stmt.Exec(id)
-	CheckError(err)
-}
-
-func currentPlaylistIds() []int {
-	var id int
-	var ids []int
-	db := GetDbHandle()
-	defer db.Close()
-	rows, err := db.Query("SELECT id from  playlist order by id")
-	CheckError(err)
-	defer rows.Close()
-	for rows.Next() {
-		err := rows.Scan(&id)
-		if err != nil {
-			fmt.Println(err.Error())
-		}
-		ids = append(ids, id)
-	}
-	return ids
-}
-
-func playlistSize() int {
-	var size int
-	db := GetDbHandle()
-	defer db.Close()
-	err := db.QueryRow("SELECT count(*) FROM playlist").Scan(&size)
-	CheckError(err)
-	return size
-}
-
-func UpdateSongdetails(s musicservice.Song) {
-	db := GetDbHandle()
-	defer db.Close()
-	stmt, err := db.Prepare("REPLACE INTO song_details(videoid, name, duration, thumbnail, views, likes, dislikes,  favourites, comments, score) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
-	CheckError(err)
-	_, err = stmt.Exec(s.Videoid, s.Details.Name, s.Details.Duration, s.Details.Thumbnail, s.Details.Views, s.Details.Likes, s.Details.Dislikes, s.Details.Favourites, s.Details.Comments, s.Score())
-	CheckError(err)
-}
+import "github.com/HarmonyProject/songster/musicservice"
 
 func getLastPlaying(userId string) musicservice.LibSong {
 	var l musicservice.LibSong
 	db := GetDbHandle()
 	defer db.Close()
 	err := db.QueryRow("SELECT videoid, artist, track, rating, fav from library where userid = ? order by last_played desc limit 1", userId).Scan(&l.Videoid, &l.Artist, &l.Track, &l.Rating, &l.Fav)
-	switch {
-	case err == sql.ErrNoRows:
-		log.Printf("No user with that ID.")
-		break
-	case err != nil:
-		log.Fatal(err)
-		break
-	}
+	CheckError(err)
 	return l
 }
 
 func addToLibrary(s musicservice.LibSong, u musicservice.User) bool {
-	status := false
 	db := GetDbHandle()
 	defer db.Close()
 	stmt, err := db.Prepare("insert into library(userid, username, videoid, artist, track, rating, fav) VALUES (?, ?, ?, ?, ?, ?, ?)")
-	if err == nil {
-		_, err = stmt.Exec(u.Id, u.Name, s.Videoid, s.Artist, s.Track, s.Rating, s.Fav)
-		if err == nil {
-			status = true
-		}
-	}
-	return status
+	CheckError(err)
+	_, err = stmt.Exec(u.Id, u.Name, s.Videoid, s.Artist, s.Track, s.Rating, s.Fav)
+	CheckError(err)
+	return true
 }
 
 func removeFromLibrary(s musicservice.LibSong, u musicservice.User) bool {
-	status := false
 	db := GetDbHandle()
 	defer db.Close()
 	stmt, err := db.Prepare("delete from library where userid = ? and videoid = ?")
-	if err == nil {
-		_, err = stmt.Exec(u.Id, s.Videoid)
-		if err == nil {
-			status = true
-		}
-	}
-	return status
+	CheckError(err)
+	_, err = stmt.Exec(u.Id, s.Videoid)
+	CheckError(err)
+	return true
 }
 
 func songExistsInLibrary(userid string, videoid string) bool {
-	status := false
 	var size int
 	db := GetDbHandle()
 	defer db.Close()
 	err := db.QueryRow("SELECT count(*) FROM library where userid = ? and videoid = ?", userid, videoid).Scan(&size)
-	fmt.Println(size)
-	if err == nil && size > 0 {
-		status = true
-	}
-	return status
+	CheckError(err)
+	return true
 }
 
 func favSongFromLibrary(userid string) musicservice.LibSong {
@@ -189,9 +45,7 @@ func favSongFromLibrary(userid string) musicservice.LibSong {
 	db := GetDbHandle()
 	defer db.Close()
 	err := db.QueryRow("SELECT videoid, artist, track, rating, fav FROM library where userid = ? and fav = true and last_played not in(select max(last_played) from library where userid = ?) order by rand() limit 1", userid, userid).Scan(&libSongObj.Videoid, &libSongObj.Artist, &libSongObj.Track, &libSongObj.Rating, &libSongObj.Fav)
-	if err != nil {
-		fmt.Println(err)
-	}
+	CheckError(err)
 	return libSongObj
 }
 
@@ -200,22 +54,16 @@ func randomSongFromLibrary(userid string) musicservice.LibSong {
 	db := GetDbHandle()
 	defer db.Close()
 	err := db.QueryRow("SELECT videoid, artist, track, rating, fav FROM library where userid = ? and last_played not in(select max(last_played) from library where userid = ?) order by rand() limit 1", userid, userid).Scan(&libSongObj.Videoid, &libSongObj.Artist, &libSongObj.Track, &libSongObj.Rating, &libSongObj.Fav)
-	if err != nil {
-		fmt.Println(err)
-	}
+	CheckError(err)
 	return libSongObj
 }
 
 func updateLastPlayedTimestamp(userid string, videoid string) bool {
-	status := false
 	db := GetDbHandle()
 	defer db.Close()
 	stmt, err := db.Prepare("update library set last_played = current_timestamp where userid = ? and videoid = ?")
-	if err == nil {
-		_, err = stmt.Exec(userid, videoid)
-		if err == nil {
-			status = true
-		}
-	}
-	return status
+	CheckError(err)
+	_, err = stmt.Exec(userid, videoid)
+	CheckError(err)
+	return true
 }
