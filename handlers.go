@@ -16,19 +16,22 @@ func CurrentlyPlayingHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func PlaylistHandler(w http.ResponseWriter, r *http.Request) {
-	playlist := GetPlaylist()
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.WriteHeader(http.StatusOK)
+	playlist := GetPlaylist()
 	json.NewEncoder(w).Encode(playlist)
 }
 
 func AddHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	// TODO use mux.vars() here.
 	query := r.FormValue("q")
 	user := r.FormValue("user")
 	status := UserAdd(query, user)
-	w.Header().Set("Access-Control-Allow-Origin", "*")
 	if status == true {
+		// TODO return status as a struct
 		w.Write([]byte("{\"status\":\"success\"}"))
 		w.WriteHeader(http.StatusOK)
 	} else {

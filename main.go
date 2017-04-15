@@ -2,15 +2,18 @@ package main
 
 import (
 	"database/sql"
-	_ "github.com/go-sql-driver/mysql"
 	"log"
 	"net/http"
+
+	_ "github.com/go-sql-driver/mysql"
+	"github.com/gorilla/mux"
 )
 
 func main() {
-	router := NewRouter()
-	go play()
-	go autoAdd()
+	router := mux.NewRouter()
+	for _, route := range routes {
+		router.HandleFunc(route.Path, route.HandlerFunc).Methods(route.Method)
+	}
 	log.Fatal(http.ListenAndServe(":25404", router))
 }
 
