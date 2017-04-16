@@ -25,8 +25,12 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 	matchedResults := getQueryResults(query)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(matchedResults)
+	if len(matchedResults) == 0 {
+		w.WriteHeader(http.StatusNotFound)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(matchedResults)
+	}
 }
 
 func LastSongHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,17 +54,16 @@ func SongExistsHandler(w http.ResponseWriter, r *http.Request) {
 
 func SongFromLibraryHandler(w http.ResponseWriter, r *http.Request) {
 	userid := r.FormValue("userid")
-	fav := r.FormValue("fav")
 	var libSongObj musicservice.LibSong
-	if fav == "true" {
-		libSongObj = favSongFromLibrary(userid)
-	} else {
-		libSongObj = randomSongFromLibrary(userid)
-	}
+	libSongObj = randomSongFromLibrary(userid)
 	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(libSongObj)
+	if libSongObj.Videoid == "" {
+		w.WriteHeader(http.StatusNotFound)
+	} else {
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(libSongObj)
+	}
 }
 
 func UpdateLibraryTimestampHandler(w http.ResponseWriter, r *http.Request) {
