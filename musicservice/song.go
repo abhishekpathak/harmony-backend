@@ -13,10 +13,9 @@ type Song struct {
 
 type LibSong struct {
 	Videoid string `json:"videoid"`
-	Artist  string `json:"artist"`
 	Track   string `json:"track"`
-	Rating  int    `json:"rating"`
 	Fav     bool   `json:"fav"`
+	Source  string `json:"source"`
 }
 
 type User struct {

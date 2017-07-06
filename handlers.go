@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/HarmonyProject/songster/musicservice"
+	"github.com/abhishekpathak/songster/musicservice"
 )
 
 func LibraryHandler(w http.ResponseWriter, r *http.Request) {

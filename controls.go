@@ -2,10 +2,9 @@ package main
 
 import (
 	"net/url"
-	"strconv"
 	"strings"
 
-	"github.com/HarmonyProject/songster/musicservice"
+	"github.com/abhishekpathak/songster/musicservice"
 )
 
 func getVideoid(youtubeLink string) string {
@@ -32,9 +31,7 @@ func UpdateLibrary(form url.Values) bool {
 	status := false
 	var song musicservice.LibSong
 	song.Videoid = form.Get("songvideoid")
-	song.Artist = form.Get("songartist")
 	song.Track = form.Get("songtrack")
-	song.Rating, _ = strconv.Atoi(form.Get("songrating"))
 	if form.Get("songfav") == "0" {
 		song.Fav = false
 	} else {
