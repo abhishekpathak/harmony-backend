@@ -18,7 +18,14 @@ func main() {
 		router.HandleFunc(route.Path, route.HandlerFunc).Methods(route.Method)
 	}
 	loggedRouter := handlers.LoggingHandler(os.Stdout, router)
-	log.Fatal(http.ListenAndServe(":25404", loggedRouter))
+
+	port := os.Getenv("PORT")
+
+	if port == "" {
+		log.Fatal("$PORT must be set")
+	}
+
+	log.Fatal(http.ListenAndServe(":" + port, loggedRouter))
 }
 
 func CheckError(err error) {
