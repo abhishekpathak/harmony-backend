@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/lib/pq"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 )
@@ -27,14 +27,25 @@ func CheckError(err error) {
 	}
 }
 
+const (
+  host     = "localhost"
+  port     = 5432
+  user     = "harmony"
+  password = "harmony"
+  dbname   = "harmony"
+)
+
 func GetDbHandle() *sql.DB {
-	DB_HOST := "localhost"
-	DB_PORT := "3306"
-	DB_NAME := "songster"
-	DSN := "songster:songster@tcp(" + DB_HOST + ":" + DB_PORT + ")/" + DB_NAME
-	db, err := sql.Open("mysql", DSN)
+	DSN := fmt.Sprintf("host=%s port=%d user=%s password=%s dbname=%s sslmode=disable", host, port, user, password, dbname)
+	db, err := sql.Open("postgres", DSN)
 	if err != nil {
-		panic(err.Error())
+		panic(err)
 	}
+
+	err = db.Ping()
+  	if err != nil {
+    		panic(err)
+  	}
+
 	return db
 }

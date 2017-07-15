@@ -33,15 +33,6 @@ func QueryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func LastSongHandler(w http.ResponseWriter, r *http.Request) {
-	userId := r.FormValue("userid")
-	lastSong := getLastPlaying(userId)
-	w.Header().Set("Content-Type", "application/json; charset=UTF-8")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(lastSong)
-}
-
 func SongExistsHandler(w http.ResponseWriter, r *http.Request) {
 	userid := r.FormValue("userid")
 	videoid := r.FormValue("videoid")

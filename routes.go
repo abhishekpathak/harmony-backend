@@ -19,12 +19,6 @@ var routes = Routes{
 		QueryHandler,
 	},
 	Route{
-		"LastSong",
-		"GET",
-		"/lastsong",
-		LastSongHandler,
-	},
-	Route{
 		"UpdateLibrary",
 		"GET",
 		"/library",
